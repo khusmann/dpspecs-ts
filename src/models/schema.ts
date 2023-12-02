@@ -9,45 +9,44 @@ export const BaseField = z.object({
   missingValues: z.array(z.string()).optional(),
 });
 
+export const BaseConstraints = z.object({
+  required: z.boolean().optional(),
+  unique: z.boolean().optional(),
+});
+
 export const AnyField = BaseField.extend({
   type: z.literal("any"),
+  constraints: BaseConstraints.optional(),
 });
 
 export const ArrayField = BaseField.extend({
   type: z.literal("array"),
   arrayItem: z.record(z.any()).optional(),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.array(z.string().or(z.number()))).optional(),
+    minLength: z.number().int().optional(),
+    maxLength: z.number().int().optional(),
+  }),
 });
 
 export const BooleanField = BaseField.extend({
   type: z.literal("boolean"),
   trueValues: z.array(z.string()).optional(),
   falseValues: z.array(z.string()).optional(),
-});
-
-export const DateField = BaseField.extend({
-  type: z.literal("date"),
-});
-
-export const DatetimeField = BaseField.extend({
-  type: z.literal("datetime"),
-});
-
-export const DurationField = BaseField.extend({
-  type: z.literal("duration"),
-});
-
-export const GeojsonField = BaseField.extend({
-  type: z.literal("geojson"),
-});
-
-export const GeopointField = BaseField.extend({
-  type: z.literal("geopoint"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.boolean()).optional(),
+  }).optional(),
 });
 
 export const IntegerField = BaseField.extend({
   type: z.literal("integer"),
   bareNumber: z.boolean().optional(),
   groupChar: z.string().optional(),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.number().int()).optional(),
+    minimum: z.number().int().optional(),
+    maximum: z.number().int().optional(),
+  }).optional(),
 });
 
 export const NumberField = BaseField.extend({
@@ -55,26 +54,88 @@ export const NumberField = BaseField.extend({
   bareNumber: z.boolean().optional(),
   groupChar: z.string().optional(),
   decimalChar: z.string().optional(),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.number()).optional(),
+    minimum: z.number().optional(),
+    maximum: z.number().optional(),
+  }).optional(),
 });
 
 export const ObjectField = BaseField.extend({
   type: z.literal("object"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.record(z.any())).optional(),
+    minLength: z.number().int().optional(),
+    maxLength: z.number().int().optional(),
+  }).optional(),
 });
 
 export const StringField = BaseField.extend({
   type: z.literal("string"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.string()).optional(),
+    minLength: z.number().int().optional(),
+    maxLength: z.number().int().optional(),
+    pattern: z.string().optional(),
+  }).optional(),
+});
+
+// TODO: the following field types need work
+
+export const DateField = BaseField.extend({
+  type: z.literal("date"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.any()).optional(),
+  }).optional(),
+});
+
+export const DatetimeField = BaseField.extend({
+  type: z.literal("datetime"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.any()).optional(),
+  }).optional(),
+});
+
+export const DurationField = BaseField.extend({
+  type: z.literal("duration"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.any()).optional(),
+  }).optional(),
+});
+
+export const GeojsonField = BaseField.extend({
+  type: z.literal("geojson"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.any()).optional(),
+  }).optional(),
+});
+
+export const GeopointField = BaseField.extend({
+  type: z.literal("geopoint"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.any()).optional(),
+  }).optional(),
 });
 
 export const TimeField = BaseField.extend({
   type: z.literal("time"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.any()).optional(),
+  }).optional(),
 });
 
 export const YearField = BaseField.extend({
   type: z.literal("year"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.any()).optional(),
+  }).optional(),
 });
 
 export const YearmonthField = BaseField.extend({
   type: z.literal("yearmonth"),
+  constraints: BaseConstraints.extend({
+    enum: z.array(z.any()).optional(),
+  }).optional(),
 });
 
 export const Field = z.union([
@@ -108,7 +169,7 @@ export const ForeignKey = z.object({
 export const Schema = z.object({
   fields: z.array(Field),
   missingValues: z.array(z.string()).optional(),
-  primaryKey: z.array(z.string()).optional(),
+  primaryKey: z.array(z.string()).or(z.string()).optional(),
   foreignKeys: z.array(ForeignKey).optional(),
 });
 
