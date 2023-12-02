@@ -166,11 +166,109 @@ export const ForeignKey = z.object({
   reference: ForeignKeyReference.optional(),
 });
 
-export const Schema = z.object({
+export const TableSchema = z.object({
   fields: z.array(Field),
   missingValues: z.array(z.string()).optional(),
   primaryKey: z.array(z.string()).or(z.string()).optional(),
   foreignKeys: z.array(ForeignKey).optional(),
+});
+
+export const Source = z.object({
+  title: z.string(),
+  path: z.string().optional(),
+  email: z.string().optional(),
+});
+
+export const Contributor = z.object({
+  title: z.string(),
+  email: z.string().optional(),
+  path: z.string().optional(),
+  role: z.string().optional(),
+  organization: z.string().optional(),
+});
+
+export const ContributorDefaults = {
+  role: "contributor",
+};
+
+export const CSVDialect = z.object({
+  delimiter: z.string().optional(),
+  lineTerminator: z.string().optional(),
+  quoteChar: z.string().optional(),
+  doubleQuote: z.boolean().optional(),
+  escapeChar: z.string().optional(),
+  nullSequence: z.string().optional(),
+  skipInitialSpace: z.boolean().optional(),
+  header: z.boolean().optional(),
+  commentChar: z.string().optional(),
+  caseSensitiveHeader: z.boolean().optional(),
+  csvddfVersion: z.string().optional(),
+});
+
+export const CSVDialectDefaults = {
+  delimiter: ",",
+  lineTerminator: "\r\n",
+  quoteChar: '"',
+  doubleQuote: true,
+  escapeChar: undefined,
+  nullSequence: undefined,
+  skipInitialSpace: false,
+  header: true,
+  caseSensitiveHeader: false,
+  csvddfVersion: "1.2",
+};
+
+export const Resource = z.object({
+  name: z.string(),
+  profile: z.string().optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  homepage: z.string().optional(),
+  version: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  image: z.string().optional(),
+  created: z.string().datetime().optional(),
+  format: z.string().optional(),
+  mediatype: z.string().optional(),
+  encoding: z.string().optional(),
+  bytes: z.number().int().optional(),
+  hash: z.string().optional(),
+  sources: z.array(Source).optional(),
+  contributors: z.array(Contributor).optional(),
+  dialect: CSVDialect.optional(),
+  schema: z.record(z.any()).or(z.string()).optional(),
+});
+
+export const TabularResource = Resource.extend({
+  profile: z.literal("tabular-data-resource"),
+  schema: TableSchema.or(z.string()),
+});
+
+export const License = z.object({
+  name: z.string(),
+  path: z.string().optional(),
+  title: z.string().optional(),
+});
+
+export const DataPackage = z.object({
+  name: z.string(),
+  id: z.string().optional(),
+  profile: z.string().optional(),
+  title: z.string().optional(),
+  licenses: z.array(License).optional(),
+  homepage: z.string().optional(),
+  version: z.string().optional(),
+  sources: z.array(Source).optional(),
+  contributors: z.array(Contributor).optional(),
+  keywords: z.array(z.string()).optional(),
+  image: z.string().optional(),
+  created: z.string().datetime().optional(),
+  resources: z.array(z.union([TabularResource, Resource])).nonempty(),
+});
+
+export const TabularDataPackage = DataPackage.extend({
+  profile: z.literal("tabular-data-package"),
+  resources: z.array(TabularResource).nonempty(),
 });
 
 export type AnyField = z.infer<typeof AnyField>;
@@ -191,4 +289,12 @@ export type YearmonthField = z.infer<typeof YearmonthField>;
 export type Field = z.infer<typeof Field>;
 export type ForeignKeyReference = z.infer<typeof ForeignKeyReference>;
 export type ForeignKey = z.infer<typeof ForeignKey>;
-export type Schema = z.infer<typeof Schema>;
+export type TableSchema = z.infer<typeof TableSchema>;
+export type Source = z.infer<typeof Source>;
+export type Contributor = z.infer<typeof Contributor>;
+export type Resource = z.infer<typeof Resource>;
+export type TabularResource = z.infer<typeof TabularResource>;
+export type License = z.infer<typeof License>;
+export type DataPackage = z.infer<typeof DataPackage>;
+export type TabularDataPackage = z.infer<typeof TabularDataPackage>;
+export type CSVDialect = z.infer<typeof CSVDialect>;
