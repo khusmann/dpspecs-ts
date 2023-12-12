@@ -218,7 +218,7 @@ export const CSVDialectDefaults = {
   csvddfVersion: "1.2",
 };
 
-export const Resource = z.object({
+export const ResourceBase = z.object({
   name: z.string(),
   profile: z.string().optional(),
   title: z.string().optional(),
@@ -239,10 +239,36 @@ export const Resource = z.object({
   schema: z.record(z.any()).or(z.string()).optional(),
 });
 
-export const TabularResource = Resource.extend({
+export const PathResource = ResourceBase.extend({
+  path: z.string(),
+});
+
+export const InlineResource = ResourceBase.extend({
+  data: z.any(),
+});
+
+export const Resource = z.union([PathResource, InlineResource]);
+
+export const TabularArrayData = z.union([
+  z.array(z.array(z.string().or(z.number()))),
+  z.array(z.array(z.record(z.string().or(z.number())))),
+]);
+
+export const TabularPathResource = PathResource.extend({
   profile: z.literal("tabular-data-resource"),
   schema: TableSchema.or(z.string()),
 });
+
+export const TabularInlineResource = InlineResource.extend({
+  profile: z.literal("tabular-data-resource"),
+  schema: TableSchema.or(z.string()),
+  data: TabularArrayData,
+});
+
+export const TabularResource = z.union([
+  TabularPathResource,
+  TabularInlineResource,
+]);
 
 export const License = z.object({
   name: z.string(),
@@ -263,11 +289,10 @@ export const DataPackage = z.object({
   keywords: z.array(z.string()).optional(),
   image: z.string().optional(),
   created: z.string().datetime().optional(),
-  resources: z.array(z.union([TabularResource, Resource])).nonempty(),
+  resources: z.array(Resource).nonempty(),
 });
 
 export const TabularDataPackage = DataPackage.extend({
-  profile: z.literal("tabular-data-package"),
   resources: z.array(TabularResource).nonempty(),
 });
 
@@ -293,8 +318,6 @@ export type TableSchema = z.infer<typeof TableSchema>;
 export type Source = z.infer<typeof Source>;
 export type Contributor = z.infer<typeof Contributor>;
 export type Resource = z.infer<typeof Resource>;
-export type TabularResource = z.infer<typeof TabularResource>;
 export type License = z.infer<typeof License>;
 export type DataPackage = z.infer<typeof DataPackage>;
-export type TabularDataPackage = z.infer<typeof TabularDataPackage>;
 export type CSVDialect = z.infer<typeof CSVDialect>;
