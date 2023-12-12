@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const BaseField = z.object({
+export const baseField = z.object({
   name: z.string(),
   type: z.string(),
   title: z.string().optional(),
@@ -9,177 +9,203 @@ export const BaseField = z.object({
   missingValues: z.array(z.string()).optional(),
 });
 
-export const BaseConstraints = z.object({
+export const baseConstraints = z.object({
   required: z.boolean().optional(),
   unique: z.boolean().optional(),
 });
 
-export const AnyField = BaseField.extend({
+export const anyField = baseField.extend({
   type: z.literal("any"),
-  constraints: BaseConstraints.optional(),
+  constraints: baseConstraints.optional(),
 });
 
-export const ArrayField = BaseField.extend({
+export const arrayField = baseField.extend({
   type: z.literal("array"),
   arrayItem: z.record(z.any()).optional(),
-  constraints: BaseConstraints.extend({
+  constraints: baseConstraints.extend({
     enum: z.array(z.array(z.string().or(z.number()))).optional(),
     minLength: z.number().int().optional(),
     maxLength: z.number().int().optional(),
   }),
 });
 
-export const BooleanField = BaseField.extend({
+export const booleanField = baseField.extend({
   type: z.literal("boolean"),
   trueValues: z.array(z.string()).optional(),
   falseValues: z.array(z.string()).optional(),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.boolean()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.boolean()).optional(),
+    })
+    .optional(),
 });
 
-export const IntegerField = BaseField.extend({
+export const integerField = baseField.extend({
   type: z.literal("integer"),
   bareNumber: z.boolean().optional(),
   groupChar: z.string().optional(),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.number().int()).optional(),
-    minimum: z.number().int().optional(),
-    maximum: z.number().int().optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.number().int()).optional(),
+      minimum: z.number().int().optional(),
+      maximum: z.number().int().optional(),
+    })
+    .optional(),
 });
 
-export const NumberField = BaseField.extend({
+export const numberField = baseField.extend({
   type: z.literal("number"),
   bareNumber: z.boolean().optional(),
   groupChar: z.string().optional(),
   decimalChar: z.string().optional(),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.number()).optional(),
-    minimum: z.number().optional(),
-    maximum: z.number().optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.number()).optional(),
+      minimum: z.number().optional(),
+      maximum: z.number().optional(),
+    })
+    .optional(),
 });
 
-export const ObjectField = BaseField.extend({
+export const objectField = baseField.extend({
   type: z.literal("object"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.record(z.any())).optional(),
-    minLength: z.number().int().optional(),
-    maxLength: z.number().int().optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.record(z.any())).optional(),
+      minLength: z.number().int().optional(),
+      maxLength: z.number().int().optional(),
+    })
+    .optional(),
 });
 
-export const StringField = BaseField.extend({
+export const stringField = baseField.extend({
   type: z.literal("string"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.string()).optional(),
-    minLength: z.number().int().optional(),
-    maxLength: z.number().int().optional(),
-    pattern: z.string().optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.string()).optional(),
+      minLength: z.number().int().optional(),
+      maxLength: z.number().int().optional(),
+      pattern: z.string().optional(),
+    })
+    .optional(),
 });
 
 // TODO: the following field types need work
 
-export const DateField = BaseField.extend({
+export const dateField = baseField.extend({
   type: z.literal("date"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.any()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.any()).optional(),
+    })
+    .optional(),
 });
 
-export const DatetimeField = BaseField.extend({
+export const datetimeField = baseField.extend({
   type: z.literal("datetime"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.any()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.any()).optional(),
+    })
+    .optional(),
 });
 
-export const DurationField = BaseField.extend({
+export const durationField = baseField.extend({
   type: z.literal("duration"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.any()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.any()).optional(),
+    })
+    .optional(),
 });
 
-export const GeojsonField = BaseField.extend({
+export const geojsonField = baseField.extend({
   type: z.literal("geojson"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.any()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.any()).optional(),
+    })
+    .optional(),
 });
 
-export const GeopointField = BaseField.extend({
+export const geopointField = baseField.extend({
   type: z.literal("geopoint"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.any()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.any()).optional(),
+    })
+    .optional(),
 });
 
-export const TimeField = BaseField.extend({
+export const timeField = baseField.extend({
   type: z.literal("time"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.any()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.any()).optional(),
+    })
+    .optional(),
 });
 
-export const YearField = BaseField.extend({
+export const yearField = baseField.extend({
   type: z.literal("year"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.any()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.any()).optional(),
+    })
+    .optional(),
 });
 
-export const YearmonthField = BaseField.extend({
+export const yearmonthField = baseField.extend({
   type: z.literal("yearmonth"),
-  constraints: BaseConstraints.extend({
-    enum: z.array(z.any()).optional(),
-  }).optional(),
+  constraints: baseConstraints
+    .extend({
+      enum: z.array(z.any()).optional(),
+    })
+    .optional(),
 });
 
-export const Field = z.union([
-  AnyField,
-  ArrayField,
-  BooleanField,
-  DateField,
-  DatetimeField,
-  DurationField,
-  GeojsonField,
-  GeopointField,
-  IntegerField,
-  NumberField,
-  ObjectField,
-  StringField,
-  TimeField,
-  YearField,
-  YearmonthField,
+export const field = z.union([
+  anyField,
+  arrayField,
+  booleanField,
+  dateField,
+  datetimeField,
+  durationField,
+  geojsonField,
+  geopointField,
+  integerField,
+  numberField,
+  objectField,
+  stringField,
+  timeField,
+  yearField,
+  yearmonthField,
 ]);
 
-export const ForeignKeyReference = z.object({
+export const foreignKeyReference = z.object({
   fields: z.array(z.string()),
   resource: z.string(),
 });
 
-export const ForeignKey = z.object({
+export const foreignKey = z.object({
   fields: z.array(z.string()),
-  reference: ForeignKeyReference.optional(),
+  reference: foreignKeyReference.optional(),
 });
 
-export const TableSchema = z.object({
-  fields: z.array(Field),
+export const tableSchema = z.object({
+  fields: z.array(field),
   missingValues: z.array(z.string()).optional(),
   primaryKey: z.array(z.string()).or(z.string()).optional(),
-  foreignKeys: z.array(ForeignKey).optional(),
+  foreignKeys: z.array(foreignKey).optional(),
 });
 
-export const Source = z.object({
+export const source = z.object({
   title: z.string(),
   path: z.string().optional(),
   email: z.string().optional(),
 });
 
-export const Contributor = z.object({
+export const contributor = z.object({
   title: z.string(),
   email: z.string().optional(),
   path: z.string().optional(),
@@ -187,11 +213,11 @@ export const Contributor = z.object({
   organization: z.string().optional(),
 });
 
-export const ContributorDefaults = {
+export const contributorDefaults = {
   role: "contributor",
 };
 
-export const CSVDialect = z.object({
+export const csvDialect = z.object({
   delimiter: z.string().optional(),
   lineTerminator: z.string().optional(),
   quoteChar: z.string().optional(),
@@ -205,7 +231,7 @@ export const CSVDialect = z.object({
   csvddfVersion: z.string().optional(),
 });
 
-export const CSVDialectDefaults = {
+export const csvDialectDefaults: CsvDialect = {
   delimiter: ",",
   lineTerminator: "\r\n",
   quoteChar: '"',
@@ -218,7 +244,7 @@ export const CSVDialectDefaults = {
   csvddfVersion: "1.2",
 };
 
-export const ResourceBase = z.object({
+export const resourceBase = z.object({
   name: z.string(),
   profile: z.string().optional(),
   title: z.string().optional(),
@@ -233,91 +259,93 @@ export const ResourceBase = z.object({
   encoding: z.string().optional(),
   bytes: z.number().int().optional(),
   hash: z.string().optional(),
-  sources: z.array(Source).optional(),
-  contributors: z.array(Contributor).optional(),
-  dialect: CSVDialect.optional(),
+  sources: z.array(source).optional(),
+  contributors: z.array(contributor).optional(),
+  dialect: csvDialect.optional(),
   schema: z.record(z.any()).or(z.string()).optional(),
 });
 
-export const PathResource = ResourceBase.extend({
+export const pathResource = resourceBase.extend({
   path: z.string(),
 });
 
-export const InlineResource = ResourceBase.extend({
+export const inlineResource = resourceBase.extend({
   data: z.any(),
 });
 
-export const Resource = z.union([PathResource, InlineResource]);
+export const resource = z.union([pathResource, inlineResource]);
 
-export const TabularArrayData = z.union([
+export const tabularArrayData = z.union([
   z.array(z.array(z.string().or(z.number()))),
   z.array(z.array(z.record(z.string().or(z.number())))),
 ]);
 
-export const TabularPathResource = PathResource.extend({
+export const tabularPathResource = pathResource.extend({
   profile: z.literal("tabular-data-resource"),
-  schema: TableSchema.or(z.string()),
+  schema: tableSchema.or(z.string()),
 });
 
-export const TabularInlineResource = InlineResource.extend({
+export const tabularInlineResource = inlineResource.extend({
   profile: z.literal("tabular-data-resource"),
-  schema: TableSchema.or(z.string()),
-  data: TabularArrayData,
+  schema: tableSchema.or(z.string()),
+  data: tabularArrayData,
 });
 
-export const TabularResource = z.union([
-  TabularPathResource,
-  TabularInlineResource,
+export const tabularResource = z.union([
+  tabularPathResource,
+  tabularInlineResource,
 ]);
 
-export const License = z.object({
+export const license = z.object({
   name: z.string(),
   path: z.string().optional(),
   title: z.string().optional(),
 });
 
-export const DataPackage = z.object({
+export const dataPackage = z.object({
   name: z.string(),
   id: z.string().optional(),
   profile: z.string().optional(),
   title: z.string().optional(),
-  licenses: z.array(License).optional(),
+  licenses: z.array(license).optional(),
   homepage: z.string().optional(),
   version: z.string().optional(),
-  sources: z.array(Source).optional(),
-  contributors: z.array(Contributor).optional(),
+  sources: z.array(source).optional(),
+  contributors: z.array(contributor).optional(),
   keywords: z.array(z.string()).optional(),
   image: z.string().optional(),
   created: z.string().datetime().optional(),
-  resources: z.array(Resource).nonempty(),
+  resources: z.array(resource).nonempty(),
 });
 
-export const TabularDataPackage = DataPackage.extend({
-  resources: z.array(TabularResource).nonempty(),
+export const tabularDataPackage = dataPackage.extend({
+  resources: z.array(tabularResource).nonempty(),
 });
 
-export type AnyField = z.infer<typeof AnyField>;
-export type ArrayField = z.infer<typeof ArrayField>;
-export type BooleanField = z.infer<typeof BooleanField>;
-export type DateField = z.infer<typeof DateField>;
-export type DatetimeField = z.infer<typeof DatetimeField>;
-export type DurationField = z.infer<typeof DurationField>;
-export type GeojsonField = z.infer<typeof GeojsonField>;
-export type GeopointField = z.infer<typeof GeopointField>;
-export type IntegerField = z.infer<typeof IntegerField>;
-export type NumberField = z.infer<typeof NumberField>;
-export type ObjectField = z.infer<typeof ObjectField>;
-export type StringField = z.infer<typeof StringField>;
-export type TimeField = z.infer<typeof TimeField>;
-export type YearField = z.infer<typeof YearField>;
-export type YearmonthField = z.infer<typeof YearmonthField>;
-export type Field = z.infer<typeof Field>;
-export type ForeignKeyReference = z.infer<typeof ForeignKeyReference>;
-export type ForeignKey = z.infer<typeof ForeignKey>;
-export type TableSchema = z.infer<typeof TableSchema>;
-export type Source = z.infer<typeof Source>;
-export type Contributor = z.infer<typeof Contributor>;
-export type Resource = z.infer<typeof Resource>;
-export type License = z.infer<typeof License>;
-export type DataPackage = z.infer<typeof DataPackage>;
-export type CSVDialect = z.infer<typeof CSVDialect>;
+export type AnyField = z.infer<typeof anyField>;
+export type ArrayField = z.infer<typeof arrayField>;
+export type BooleanField = z.infer<typeof booleanField>;
+export type DateField = z.infer<typeof dateField>;
+export type DatetimeField = z.infer<typeof datetimeField>;
+export type DurationField = z.infer<typeof durationField>;
+export type GeojsonField = z.infer<typeof geojsonField>;
+export type GeopointField = z.infer<typeof geopointField>;
+export type IntegerField = z.infer<typeof integerField>;
+export type NumberField = z.infer<typeof numberField>;
+export type ObjectField = z.infer<typeof objectField>;
+export type StringField = z.infer<typeof stringField>;
+export type TimeField = z.infer<typeof timeField>;
+export type YearField = z.infer<typeof yearField>;
+export type YearmonthField = z.infer<typeof yearmonthField>;
+export type Field = z.infer<typeof field>;
+export type ForeignKeyReference = z.infer<typeof foreignKeyReference>;
+export type ForeignKey = z.infer<typeof foreignKey>;
+export type TableSchema = z.infer<typeof tableSchema>;
+export type Source = z.infer<typeof source>;
+export type Contributor = z.infer<typeof contributor>;
+export type Resource = z.infer<typeof resource>;
+export type License = z.infer<typeof license>;
+export type DataPackage = z.infer<typeof dataPackage>;
+export type CsvDialect = z.infer<typeof csvDialect>;
+export type TabularDataPackage = z.infer<typeof tabularDataPackage>;
+export type TabularResource = z.infer<typeof tabularResource>;
