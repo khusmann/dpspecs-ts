@@ -1,18 +1,22 @@
 import { z } from "zod";
 
-export const baseField = z.object({
-  name: z.string(),
-  type: z.string(),
-  title: z.string().optional(),
-  description: z.string().optional(),
-  format: z.string().optional(),
-  missingValues: z.array(z.string()).optional(),
-});
+export const baseField = z
+  .object({
+    name: z.string(),
+    type: z.string(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    format: z.string().optional(),
+    missingValues: z.array(z.string()).optional(),
+  })
+  .passthrough();
 
-export const baseConstraints = z.object({
-  required: z.boolean().optional(),
-  unique: z.boolean().optional(),
-});
+export const baseConstraints = z
+  .object({
+    required: z.boolean().optional(),
+    unique: z.boolean().optional(),
+  })
+  .passthrough();
 
 export const anyField = baseField.extend({
   type: z.literal("any"),
@@ -182,56 +186,68 @@ export const field = z.union([
   yearmonthField,
 ]);
 
-export const foreignKeyReference = z.object({
-  fields: z.array(z.string()),
-  resource: z.string(),
-});
+export const foreignKeyReference = z
+  .object({
+    fields: z.array(z.string()),
+    resource: z.string(),
+  })
+  .passthrough();
 
-export const foreignKey = z.object({
-  fields: z.array(z.string()),
-  reference: foreignKeyReference.optional(),
-});
+export const foreignKey = z
+  .object({
+    fields: z.array(z.string()),
+    reference: foreignKeyReference.optional(),
+  })
+  .passthrough();
 
-export const tableSchema = z.object({
-  fields: z.array(field),
-  missingValues: z.array(z.string()).optional(),
-  primaryKey: z.array(z.string()).or(z.string()).optional(),
-  foreignKeys: z.array(foreignKey).optional(),
-});
+export const tableSchema = z
+  .object({
+    fields: z.array(field),
+    missingValues: z.array(z.string()).optional(),
+    primaryKey: z.array(z.string()).or(z.string()).optional(),
+    foreignKeys: z.array(foreignKey).optional(),
+  })
+  .passthrough();
 
-export const source = z.object({
-  title: z.string(),
-  path: z.string().optional(),
-  email: z.string().optional(),
-});
+export const source = z
+  .object({
+    title: z.string(),
+    path: z.string().optional(),
+    email: z.string().optional(),
+  })
+  .passthrough();
 
-export const contributor = z.object({
-  title: z.string(),
-  email: z.string().optional(),
-  path: z.string().optional(),
-  role: z.string().optional(),
-  organization: z.string().optional(),
-});
+export const contributor = z
+  .object({
+    title: z.string(),
+    email: z.string().optional(),
+    path: z.string().optional(),
+    role: z.string().optional(),
+    organization: z.string().optional(),
+  })
+  .passthrough();
 
-export const contributorDefaults = {
+export const contributorDefaults: Partial<Contributor> = {
   role: "contributor",
 };
 
-export const csvDialect = z.object({
-  delimiter: z.string().optional(),
-  lineTerminator: z.string().optional(),
-  quoteChar: z.string().optional(),
-  doubleQuote: z.boolean().optional(),
-  escapeChar: z.string().optional(),
-  nullSequence: z.string().optional(),
-  skipInitialSpace: z.boolean().optional(),
-  header: z.boolean().optional(),
-  commentChar: z.string().optional(),
-  caseSensitiveHeader: z.boolean().optional(),
-  csvddfVersion: z.string().optional(),
-});
+export const csvDialect = z
+  .object({
+    delimiter: z.string().optional(),
+    lineTerminator: z.string().optional(),
+    quoteChar: z.string().optional(),
+    doubleQuote: z.boolean().optional(),
+    escapeChar: z.string().optional(),
+    nullSequence: z.string().optional(),
+    skipInitialSpace: z.boolean().optional(),
+    header: z.boolean().optional(),
+    commentChar: z.string().optional(),
+    caseSensitiveHeader: z.boolean().optional(),
+    csvddfVersion: z.string().optional(),
+  })
+  .passthrough();
 
-export const csvDialectDefaults: CsvDialect = {
+export const csvDialectDefaults: Partial<CsvDialect> = {
   delimiter: ",",
   lineTerminator: "\r\n",
   quoteChar: '"',
@@ -244,34 +260,40 @@ export const csvDialectDefaults: CsvDialect = {
   csvddfVersion: "1.2",
 };
 
-export const resourceBase = z.object({
-  name: z.string(),
-  profile: z.string().optional(),
-  title: z.string().optional(),
-  description: z.string().optional(),
-  homepage: z.string().optional(),
-  version: z.string().optional(),
-  keywords: z.array(z.string()).optional(),
-  image: z.string().optional(),
-  created: z.string().datetime().optional(),
-  format: z.string().optional(),
-  mediatype: z.string().optional(),
-  encoding: z.string().optional(),
-  bytes: z.number().int().optional(),
-  hash: z.string().optional(),
-  sources: z.array(source).optional(),
-  contributors: z.array(contributor).optional(),
-  dialect: csvDialect.optional(),
-  schema: z.record(z.any()).or(z.string()).optional(),
-});
+export const resourceBase = z
+  .object({
+    name: z.string(),
+    profile: z.string().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    homepage: z.string().optional(),
+    version: z.string().optional(),
+    keywords: z.array(z.string()).optional(),
+    image: z.string().optional(),
+    created: z.string().datetime().optional(),
+    format: z.string().optional(),
+    mediatype: z.string().optional(),
+    encoding: z.string().optional(),
+    bytes: z.number().int().optional(),
+    hash: z.string().optional(),
+    sources: z.array(source).optional(),
+    contributors: z.array(contributor).optional(),
+    dialect: csvDialect.optional(),
+    schema: z.record(z.any()).or(z.string()).optional(),
+  })
+  .passthrough();
 
-export const pathResource = resourceBase.extend({
-  path: z.string(),
-});
+export const pathResource = resourceBase
+  .extend({
+    path: z.string(),
+  })
+  .passthrough();
 
-export const inlineResource = resourceBase.extend({
-  data: z.any(),
-});
+export const inlineResource = resourceBase
+  .extend({
+    data: z.any(),
+  })
+  .passthrough();
 
 export const resource = z.union([pathResource, inlineResource]);
 
@@ -280,47 +302,57 @@ export const tabularArrayData = z.union([
   z.array(z.array(z.record(z.string().or(z.number())))),
 ]);
 
-export const tabularPathResource = pathResource.extend({
-  profile: z.literal("tabular-data-resource"),
-  schema: tableSchema.or(z.string()),
-});
+export const tabularPathResource = pathResource
+  .extend({
+    profile: z.literal("tabular-data-resource"),
+    schema: tableSchema.or(z.string()),
+  })
+  .passthrough();
 
-export const tabularInlineResource = inlineResource.extend({
-  profile: z.literal("tabular-data-resource"),
-  schema: tableSchema.or(z.string()),
-  data: tabularArrayData,
-});
+export const tabularInlineResource = inlineResource
+  .extend({
+    profile: z.literal("tabular-data-resource"),
+    schema: tableSchema.or(z.string()),
+    data: tabularArrayData,
+  })
+  .passthrough();
 
 export const tabularResource = z.union([
   tabularPathResource,
   tabularInlineResource,
 ]);
 
-export const license = z.object({
-  name: z.string(),
-  path: z.string().optional(),
-  title: z.string().optional(),
-});
+export const license = z
+  .object({
+    name: z.string(),
+    path: z.string().optional(),
+    title: z.string().optional(),
+  })
+  .passthrough();
 
-export const dataPackage = z.object({
-  name: z.string(),
-  id: z.string().optional(),
-  profile: z.string().optional(),
-  title: z.string().optional(),
-  licenses: z.array(license).optional(),
-  homepage: z.string().optional(),
-  version: z.string().optional(),
-  sources: z.array(source).optional(),
-  contributors: z.array(contributor).optional(),
-  keywords: z.array(z.string()).optional(),
-  image: z.string().optional(),
-  created: z.string().datetime().optional(),
-  resources: z.array(resource).nonempty(),
-});
+export const dataPackage = z
+  .object({
+    name: z.string(),
+    id: z.string().optional(),
+    profile: z.string().optional(),
+    title: z.string().optional(),
+    licenses: z.array(license).optional(),
+    homepage: z.string().optional(),
+    version: z.string().optional(),
+    sources: z.array(source).optional(),
+    contributors: z.array(contributor).optional(),
+    keywords: z.array(z.string()).optional(),
+    image: z.string().optional(),
+    created: z.string().datetime().optional(),
+    resources: z.array(resource).nonempty(),
+  })
+  .passthrough();
 
-export const tabularDataPackage = dataPackage.extend({
-  resources: z.array(tabularResource).nonempty(),
-});
+export const tabularDataPackage = dataPackage
+  .extend({
+    resources: z.array(tabularResource).nonempty(),
+  })
+  .passthrough();
 
 export type AnyField = z.infer<typeof anyField>;
 export type ArrayField = z.infer<typeof arrayField>;
