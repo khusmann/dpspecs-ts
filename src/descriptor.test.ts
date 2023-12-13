@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { tableSchema } from "./model";
+import { tableSchema } from "./descriptor";
 
 test("Test error", () => {
   expect(tableSchema.parse({ fields: [] })).toEqual({ fields: [] });
