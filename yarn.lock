@@ -25,6 +25,8 @@ __metadata:
   resolution: "@dpspecs/plugin-polars@workspace:packages/dpspecs-plugin-polars"
   dependencies:
     "@dpspecs/core": "npm:0.0.1"
+    nodejs-polars: "npm:^0.8.3"
+    ts-pattern: "npm:^5.0.6"
   languageName: unknown
   linkType: soft
 
@@ -2197,6 +2199,105 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nodejs-polars-android-arm64@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-android-arm64@npm:0.8.3"
+  conditions: os=android & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"nodejs-polars-darwin-arm64@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-darwin-arm64@npm:0.8.3"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"nodejs-polars-darwin-x64@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-darwin-x64@npm:0.8.3"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"nodejs-polars-linux-arm64-gnu@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-linux-arm64-gnu@npm:0.8.3"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"nodejs-polars-linux-arm64-musl@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-linux-arm64-musl@npm:0.8.3"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"nodejs-polars-linux-x64-gnu@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-linux-x64-gnu@npm:0.8.3"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"nodejs-polars-linux-x64-musl@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-linux-x64-musl@npm:0.8.3"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"nodejs-polars-win32-ia32-msvc@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-win32-ia32-msvc@npm:0.8.3"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"nodejs-polars-win32-x64-msvc@npm:0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars-win32-x64-msvc@npm:0.8.3"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"nodejs-polars@npm:^0.8.3":
+  version: 0.8.3
+  resolution: "nodejs-polars@npm:0.8.3"
+  dependencies:
+    nodejs-polars-android-arm64: "npm:0.8.3"
+    nodejs-polars-darwin-arm64: "npm:0.8.3"
+    nodejs-polars-darwin-x64: "npm:0.8.3"
+    nodejs-polars-linux-arm64-gnu: "npm:0.8.3"
+    nodejs-polars-linux-arm64-musl: "npm:0.8.3"
+    nodejs-polars-linux-x64-gnu: "npm:0.8.3"
+    nodejs-polars-linux-x64-musl: "npm:0.8.3"
+    nodejs-polars-win32-ia32-msvc: "npm:0.8.3"
+    nodejs-polars-win32-x64-msvc: "npm:0.8.3"
+  dependenciesMeta:
+    nodejs-polars-android-arm64:
+      optional: true
+    nodejs-polars-darwin-arm64:
+      optional: true
+    nodejs-polars-darwin-x64:
+      optional: true
+    nodejs-polars-linux-arm64-gnu:
+      optional: true
+    nodejs-polars-linux-arm64-musl:
+      optional: true
+    nodejs-polars-linux-x64-gnu:
+      optional: true
+    nodejs-polars-linux-x64-musl:
+      optional: true
+    nodejs-polars-win32-ia32-msvc:
+      optional: true
+    nodejs-polars-win32-x64-msvc:
+      optional: true
+  checksum: af53910dc783cb11af497e04a9882661a902bc6f066d98c53c22f38f7aa74438e059ae760a3a90ff4984216928722738b5fbea3abcdf355685b8a92beedbbf8f
+  languageName: node
+  linkType: hard
+
 "nopt@npm:^7.0.0":
   version: 7.2.0
   resolution: "nopt@npm:7.2.0"
@@ -2869,6 +2970,13 @@ __metadata:
   peerDependencies:
     typescript: ">=4.2.0"
   checksum: 9408338819c3aca2a709f0bc54e3f874227901506cacb1163612a6c8a43df224174feb965a5eafdae16f66fc68fd7bfee8d3275d0fa73fbb8699e03ed26520c9
+  languageName: node
+  linkType: hard
+
+"ts-pattern@npm:^5.0.6":
+  version: 5.0.6
+  resolution: "ts-pattern@npm:5.0.6"
+  checksum: 723cab89529fdbfc7c5ec81cc41529aa259bc92bc05a9b89f2a99e9bcdbfcbebcc42f0cb6ef5935028bac44f0601e4c4728fec0a98b1a129d5ad6345828a8d01
   languageName: node
   linkType: hard
 

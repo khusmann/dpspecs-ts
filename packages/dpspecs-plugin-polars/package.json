@@ -5,6 +5,8 @@
   "main": "dist/src",
   "types": "dist/src",
   "dependencies": {
-    "@dpspecs/core": "0.0.1"
+    "@dpspecs/core": "0.0.1",
+    "nodejs-polars": "^0.8.3",
+    "ts-pattern": "^5.0.6"
   }
 }

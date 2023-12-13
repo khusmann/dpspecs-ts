@@ -297,6 +297,13 @@ export const inlineResource = resourceBase
 
 export const resource = z.union([pathResource, inlineResource]);
 
+export const isPathResource = (resource: Resource): resource is PathResource =>
+  "path" in resource;
+
+export const isInlineResource = (
+  resource: Resource
+): resource is InlineResource => "data" in resource;
+
 export const license = z
   .object({
     name: z.string(),
@@ -346,5 +353,7 @@ export type Source = z.infer<typeof source>;
 export type Contributor = z.infer<typeof contributor>;
 export type License = z.infer<typeof license>;
 export type CsvDialect = z.infer<typeof csvDialect>;
+export type PathResource = z.infer<typeof pathResource>;
+export type InlineResource = z.infer<typeof inlineResource>;
 export type Resource = z.infer<typeof resource>;
 export type DataPackage = z.infer<typeof dataPackage>;
