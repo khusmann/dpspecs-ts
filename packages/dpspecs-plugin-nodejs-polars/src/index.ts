@@ -5,23 +5,23 @@ import { z } from "zod";
 
 export const polarsTypeFromDp = (field: d.Field): pl.DataType =>
   match(field)
-    .with({ type: "string" } as const, () => pl.DataType.Utf8)
-    .with({ type: "boolean" } as const, () => pl.DataType.Bool)
-    .with({ type: "integer" } as const, () => pl.DataType.Int64)
-    .with({ type: "number" } as const, () => pl.DataType.Float64)
-    .with({ type: "object" } as const, () => pl.DataType.Object)
-    .with({ type: "array" } as const, () => pl.DataType.List(pl.DataType.Utf8))
-    .with({ type: "geojson" } as const, () => pl.DataType.Object)
-    .with({ type: "date" } as const, () => pl.DataType.Date)
-    .with({ type: "time" } as const, () => pl.DataType.Time)
-    .with({ type: "datetime" } as const, () =>
+    .with({ type: "string" }, () => pl.DataType.Utf8)
+    .with({ type: "boolean" }, () => pl.DataType.Bool)
+    .with({ type: "integer" }, () => pl.DataType.Int64)
+    .with({ type: "number" }, () => pl.DataType.Float64)
+    .with({ type: "object" }, () => pl.DataType.Object)
+    .with({ type: "array" }, () => pl.DataType.List(pl.DataType.Utf8))
+    .with({ type: "geojson" }, () => pl.DataType.Object)
+    .with({ type: "date" }, () => pl.DataType.Date)
+    .with({ type: "time" }, () => pl.DataType.Time)
+    .with({ type: "datetime" }, () =>
       pl.DataType.Datetime(pl.TimeUnit.Milliseconds)
     )
-    .with({ type: "duration" } as const, () => pl.DataType.Time)
-    .with({ type: "any" } as const, () => pl.DataType.Object)
-    .with({ type: "geopoint" } as const, () => pl.DataType.Object)
-    .with({ type: "year" } as const, () => pl.DataType.Date)
-    .with({ type: "yearmonth" } as const, () => pl.DataType.Date)
+    .with({ type: "duration" }, () => pl.DataType.Time)
+    .with({ type: "any" }, () => pl.DataType.Object)
+    .with({ type: "geopoint" }, () => pl.DataType.Object)
+    .with({ type: "year" }, () => pl.DataType.Date)
+    .with({ type: "yearmonth" }, () => pl.DataType.Date)
     .exhaustive();
 
 const resolveDescriptor = async <T extends z.ZodTypeAny>(

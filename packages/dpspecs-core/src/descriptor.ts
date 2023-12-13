@@ -1,15 +1,12 @@
 import { z } from "zod";
 
-export const baseField = z
-  .object({
-    name: z.string(),
-    type: z.string(),
-    title: z.string().optional(),
-    description: z.string().optional(),
-    format: z.string().optional(),
-    missingValues: z.array(z.string()).optional(),
-  })
-  .passthrough();
+export const baseField = z.object({
+  name: z.string(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  format: z.string().optional(),
+  missingValues: z.array(z.string()).optional(),
+});
 
 export const baseConstraints = z
   .object({

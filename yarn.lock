@@ -16,17 +16,16 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dpspecs/core@workspace:packages/dpspecs-core"
   dependencies:
-    zod: "npm:^3.22.4"
+    typescript: "npm:^5.3.3"
   languageName: unknown
   linkType: soft
 
-"@dpspecs/plugin-polars@workspace:packages/dpspecs-plugin-polars":
+"@dpspecs/plugin-nodejs-polars@workspace:packages/dpspecs-plugin-nodejs-polars":
   version: 0.0.0-use.local
-  resolution: "@dpspecs/plugin-polars@workspace:packages/dpspecs-plugin-polars"
+  resolution: "@dpspecs/plugin-nodejs-polars@workspace:packages/dpspecs-plugin-nodejs-polars"
   dependencies:
     "@dpspecs/core": "npm:0.0.1"
     nodejs-polars: "npm:^0.8.3"
-    ts-pattern: "npm:^5.0.6"
   languageName: unknown
   linkType: soft
 
@@ -1059,8 +1058,10 @@ __metadata:
     eslint-config-prettier: "npm:^9.0.0"
     eslint-plugin-prettier: "npm:^5.0.1"
     prettier: "npm:^3.1.0"
+    ts-pattern: "npm:^5.0.6"
     typescript: "npm:^5.3.3"
     vitest: "npm:^0.34.6"
+    zod: "npm:^3.22.4"
   languageName: unknown
   linkType: soft
 

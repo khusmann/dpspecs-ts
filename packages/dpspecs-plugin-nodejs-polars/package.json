@@ -1,12 +1,11 @@
 {
-  "name": "@dpspecs/plugin-polars",
+  "name": "@dpspecs/plugin-nodejs-polars",
   "version": "0.0.1",
   "packageManager": "yarn@4.0.2",
   "main": "dist/src",
   "types": "dist/src",
   "dependencies": {
     "@dpspecs/core": "0.0.1",
-    "nodejs-polars": "^0.8.3",
-    "ts-pattern": "^5.0.6"
+    "nodejs-polars": "^0.8.3"
   }
 }
