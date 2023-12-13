@@ -297,31 +297,6 @@ export const inlineResource = resourceBase
 
 export const resource = z.union([pathResource, inlineResource]);
 
-export const tabularArrayData = z.union([
-  z.array(z.array(z.string().or(z.number()))),
-  z.array(z.array(z.record(z.string().or(z.number())))),
-]);
-
-export const tabularPathResource = pathResource
-  .extend({
-    profile: z.literal("tabular-data-resource"),
-    schema: tableSchema.or(z.string()),
-  })
-  .passthrough();
-
-export const tabularInlineResource = inlineResource
-  .extend({
-    profile: z.literal("tabular-data-resource"),
-    schema: tableSchema.or(z.string()),
-    data: tabularArrayData,
-  })
-  .passthrough();
-
-export const tabularResource = z.union([
-  tabularPathResource,
-  tabularInlineResource,
-]);
-
 export const license = z
   .object({
     name: z.string(),
@@ -348,12 +323,6 @@ export const dataPackage = z
   })
   .passthrough();
 
-export const tabularDataPackage = dataPackage
-  .extend({
-    resources: z.array(tabularResource).nonempty(),
-  })
-  .passthrough();
-
 export type AnyField = z.infer<typeof anyField>;
 export type ArrayField = z.infer<typeof arrayField>;
 export type BooleanField = z.infer<typeof booleanField>;
@@ -375,9 +344,7 @@ export type ForeignKey = z.infer<typeof foreignKey>;
 export type TableSchema = z.infer<typeof tableSchema>;
 export type Source = z.infer<typeof source>;
 export type Contributor = z.infer<typeof contributor>;
-export type Resource = z.infer<typeof resource>;
 export type License = z.infer<typeof license>;
-export type DataPackage = z.infer<typeof dataPackage>;
 export type CsvDialect = z.infer<typeof csvDialect>;
-export type TabularDataPackage = z.infer<typeof tabularDataPackage>;
-export type TabularResource = z.infer<typeof tabularResource>;
+export type Resource = z.infer<typeof resource>;
+export type DataPackage = z.infer<typeof dataPackage>;

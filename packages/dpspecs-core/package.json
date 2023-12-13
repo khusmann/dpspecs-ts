@@ -1,0 +1,13 @@
+{
+  "name": "@dpspecs/core",
+  "packageManager": "yarn@4.0.2",
+  "scripts": {
+    "build": "tsc"
+  },
+  "main": "dist/src",
+  "types": "dist/src",
+  "version": "0.0.1",
+  "dependencies": {
+    "zod": "^3.22.4"
+  }
+}
