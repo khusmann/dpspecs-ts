@@ -12,7 +12,7 @@ test("Test read", async () => {
 
   const descriptor = await resolveDescriptor(d.dataPackage, packagePath);
 
-  const df = await readResource(descriptor.resources[0], rootDir);
+  const df = await readResource(descriptor.resources[1], rootDir);
 
   console.log(df);
 

@@ -26,10 +26,7 @@ const typeFromDp = (field: d.Field): pl.DataType =>
     .with({ type: "yearmonth" }, () => pl.DataType.Utf8)
     .otherwise(() => pl.DataType.Utf8);
 
-const scanCsvOptionsFromDp = (
-  dialect: d.CsvDialect | undefined,
-  encoding: string | undefined
-): Optional<pl.ScanCsvOptions, "commentChar"> => {
+const checkCsvDialect = (dialect: d.CsvDialect | undefined) => {
   const opts = { ...d.csvDialectDefaults, ...dialect };
 
   if (opts.escapeChar !== undefined) {
@@ -66,10 +63,11 @@ const scanCsvOptionsFromDp = (
     throw new Error("caseSensitiveHeader = true not supported");
   }
 
-  if (encoding !== undefined && encoding !== "utf8" && encoding !== "utf-8") {
-    throw new Error(`Encoding not supported ({encoding})`);
-  }
+  return opts;
+};
 
+const csvOptionsFromDp = (dialect: d.CsvDialect | undefined) => {
+  const opts = checkCsvDialect(dialect);
   return {
     // CSV Dialect
     hasHeader: opts.header,
@@ -77,19 +75,15 @@ const scanCsvOptionsFromDp = (
     commentChar: opts.commentChar, // undefined => no comments
     quoteChar: opts.quoteChar,
     nullValues: [],
-    encoding: "utf8",
+    encoding: "utf8" as const,
 
     // Read options
     inferSchemaLength: 0,
     skipRows: 0,
     skipRowsAfterHeader: 0,
-    nRows: -1,
 
     // Polars things (from defaults)
     ignoreErrors: false,
-    cache: true,
-    rechunk: false,
-    lowMemory: false,
     parseDates: false,
   };
 };
@@ -106,6 +100,47 @@ const scanPathResource =
     return result;
   };
 
+const isUrl = (path: string): boolean =>
+  path.startsWith("http") || path.startsWith("https");
+
+const scanPathCsvHelper = async (
+  relPath: string,
+  rootDir: string,
+  dialect: d.CsvDialect | undefined
+): Promise<pl.LazyDataFrame> => {
+  if (relPath.startsWith("/")) {
+    throw new Error("Absolute paths not supported");
+  }
+
+  if (relPath.includes("..")) {
+    throw new Error("Relative paths with .. not supported");
+  }
+
+  const scanOptions = csvOptionsFromDp(dialect);
+
+  if (isUrl(relPath)) {
+    return scanUrlCsvHelper(relPath, scanOptions);
+  }
+
+  if (isUrl(rootDir)) {
+    return scanUrlCsvHelper(path.join(rootDir, relPath), scanOptions);
+  }
+
+  return pl.scanCSV(path.join(rootDir, relPath), scanOptions);
+};
+
+const scanUrlCsvHelper = async (
+  url: string,
+  dialect: d.CsvDialect | undefined
+): Promise<pl.LazyDataFrame> => {
+  const response = await fetch(url);
+  const csv = await response.arrayBuffer();
+  if (csv === null) {
+    throw new Error("Unable to fetch CSV");
+  }
+  return pl.readCSV(Buffer.from(csv), csvOptionsFromDp(dialect)).lazy();
+};
+
 const tryScanPathCsv = async (
   resource: d.PathResource,
   rootDir: string
@@ -113,12 +148,10 @@ const tryScanPathCsv = async (
   const paths =
     typeof resource.path === "string" ? [resource.path] : resource.path;
 
-  const absPaths = paths.map((p) => path.join(rootDir, p));
-
   // Verify format is CSV
   if (resource.format === undefined) {
     // If no resource format given, make sure all paths end with .csv
-    if (!absPaths.every((p) => p.endsWith(".csv"))) {
+    if (!paths.every((p) => p.endsWith(".csv"))) {
       return undefined;
     }
   } else {
@@ -128,21 +161,25 @@ const tryScanPathCsv = async (
     }
   }
 
-  // TODO: resolve URLs if necessary
+  if (
+    resource.encoding !== undefined &&
+    resource.encoding !== "utf8" &&
+    resource.encoding !== "utf-8"
+  ) {
+    throw new Error(`Encoding not supported ({resource.encoding})`);
+  }
 
-  const polarsScanOptions = scanCsvOptionsFromDp(
-    resource.dialect,
-    resource.encoding
-  );
-
-  if (absPaths.length === 1) {
-    return pl.scanCSV(absPaths[0], polarsScanOptions);
+  if (paths.length === 1) {
+    return await scanPathCsvHelper(paths[0], rootDir, resource.dialect);
   } else {
-    const allData = await Promise.all(
-      absPaths.map((p) => pl.scanCSV(p, polarsScanOptions).collect())
+    const scannedData = await Promise.all(
+      paths.map((p) => scanPathCsvHelper(p, rootDir, resource.dialect))
+    );
+    const collectedData = await Promise.all(
+      scannedData.map((df) => df.collect())
     );
     // TODO: change this when concat accepts lazyframes natively
-    return pl.concat(allData).lazy();
+    return pl.concat(collectedData).lazy();
   }
 };
 
