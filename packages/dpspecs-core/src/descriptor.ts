@@ -16,7 +16,7 @@ export const baseConstraints = z
   .passthrough();
 
 export const anyField = baseField.extend({
-  type: z.literal("any"),
+  type: z.literal("any").optional(),
   constraints: baseConstraints.optional(),
 });
 
@@ -185,14 +185,14 @@ export const field = z.union([
 
 export const foreignKeyReference = z
   .object({
-    fields: z.array(z.string()),
+    fields: z.array(z.string()).or(z.string()),
     resource: z.string(),
   })
   .passthrough();
 
 export const foreignKey = z
   .object({
-    fields: z.array(z.string()),
+    fields: z.array(z.string()).or(z.string()),
     reference: foreignKeyReference.optional(),
   })
   .passthrough();

@@ -12,20 +12,19 @@ const typeFromDp = (field: d.Field): pl.DataType =>
     .with({ type: "boolean" }, () => pl.DataType.Bool)
     .with({ type: "integer" }, () => pl.DataType.Int64)
     .with({ type: "number" }, () => pl.DataType.Float64)
-    .with({ type: "object" }, () => pl.DataType.Object)
     .with({ type: "array" }, () => pl.DataType.List(pl.DataType.Utf8))
-    .with({ type: "geojson" }, () => pl.DataType.Object)
-    .with({ type: "date" }, () => pl.DataType.Date)
-    .with({ type: "time" }, () => pl.DataType.Time)
-    .with({ type: "datetime" }, () =>
-      pl.DataType.Datetime(pl.TimeUnit.Milliseconds)
-    )
-    .with({ type: "duration" }, () => pl.DataType.Time)
-    .with({ type: "any" }, () => pl.DataType.Object)
-    .with({ type: "geopoint" }, () => pl.DataType.Object)
-    .with({ type: "year" }, () => pl.DataType.Date)
-    .with({ type: "yearmonth" }, () => pl.DataType.Date)
-    .exhaustive();
+    .with({ type: "any" }, () => pl.DataType.Utf8)
+    // TODO: support the rest of these types...
+    .with({ type: "object" }, () => pl.DataType.Utf8)
+    .with({ type: "geojson" }, () => pl.DataType.Utf8)
+    .with({ type: "date" }, () => pl.DataType.Utf8)
+    .with({ type: "time" }, () => pl.DataType.Utf8)
+    .with({ type: "datetime" }, () => pl.DataType.Utf8)
+    .with({ type: "duration" }, () => pl.DataType.Utf8)
+    .with({ type: "geopoint" }, () => pl.DataType.Utf8)
+    .with({ type: "year" }, () => pl.DataType.Utf8)
+    .with({ type: "yearmonth" }, () => pl.DataType.Utf8)
+    .otherwise(() => pl.DataType.Utf8);
 
 const scanCsvOptionsFromDp = (
   dialect: d.CsvDialect | undefined,
@@ -183,11 +182,19 @@ const tryScanInlineCsv = async (
 export const scanResourceRaw = async (
   resource: d.Resource,
   rootDir: string
-): Promise<pl.LazyDataFrame> =>
-  match(resource)
+): Promise<pl.LazyDataFrame> => {
+  const result = await match(resource)
     .with(P._, d.isPathResource, scanPathResource(rootDir))
     .with(P._, d.isInlineResource, scanInlineResource)
     .exhaustive();
+
+  // Replace null values with empty string ("")
+  return result.select(
+    result.columns.map((c) =>
+      pl.when(pl.col(c).isNull()).then(pl.lit("")).otherwise(pl.col(c)).alias(c)
+    )
+  );
+};
 
 export const readResourceRaw = async (
   resource: d.Resource,
@@ -197,17 +204,69 @@ export const readResourceRaw = async (
   return await scannedResource.collect();
 };
 
+export type ScanResourceResult = {
+  values: pl.LazyDataFrame;
+  missing: pl.LazyDataFrame;
+};
+
+export type ReadResourceResult = {
+  values: pl.DataFrame;
+  missing: pl.DataFrame;
+};
+
 export const scanResource = async (
   resource: d.Resource,
   rootDir: string
-): Promise<pl.LazyDataFrame> => {
-  return await scanResourceRaw(resource, rootDir);
+): Promise<ScanResourceResult> => {
+  if (resource.schema === undefined) {
+    throw new Error("Resource schema is undefined");
+  }
+
+  const schema = await resolveDescriptor(d.tableSchema, resource.schema);
+
+  const raw = await scanResourceRaw(resource, rootDir);
+
+  if (schema.fields.length !== raw.columns.length) {
+    throw new Error(
+      `Schema and columns length mismatch (${schema.fields.length} vs ${raw.columns.length})`
+    );
+  }
+
+  const valueExprs = schema.fields.map((field, idx) => {
+    const col = raw.columns[idx];
+    const missingValues = field.missingValues ?? schema.missingValues ?? [];
+    const type = typeFromDp(field);
+    return pl
+      .when(pl.col(col).isIn(missingValues))
+      .then(pl.lit(null))
+      .otherwise(pl.col(col))
+      .cast(type)
+      .alias(field.name);
+  });
+
+  const missingExprs = schema.fields.map((field, idx) => {
+    const col = raw.columns[idx];
+    const missingValues = field.missingValues ?? schema.missingValues ?? [];
+    return pl
+      .when(pl.col(col).isIn(missingValues))
+      .then(pl.col(col))
+      .otherwise(pl.lit(null))
+      .alias(field.name);
+  });
+
+  return {
+    values: raw.select(valueExprs),
+    missing: raw.select(missingExprs),
+  };
 };
 
 export const readResource = async (
   resource: d.Resource,
   rootDir: string
-): Promise<pl.DataFrame> => {
+): Promise<ReadResourceResult> => {
   const scannedResource = await scanResource(resource, rootDir);
-  return await scannedResource.collect();
+  return {
+    values: await scannedResource.values.collect(),
+    missing: await scannedResource.missing.collect(),
+  };
 };
