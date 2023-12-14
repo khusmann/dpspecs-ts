@@ -1,6 +1,7 @@
 import * as d from "@dpspecs/core";
 import * as pl from "nodejs-polars";
 import { match, P } from "ts-pattern";
+import { Optional } from "utility-types";
 import * as path from "path";
 import { z } from "zod";
 
@@ -28,7 +29,7 @@ const polarsTypeFromDp = (field: d.Field): pl.DataType =>
 const polarsScanCsvOptionsFromDp = (
   dialect: d.CsvDialect | undefined,
   encoding: string | undefined
-): Partial<pl.ScanCsvOptions> => {
+): Optional<pl.ScanCsvOptions, "commentChar"> => {
   const opts = { ...d.csvDialectDefaults, ...dialect };
 
   if (opts.escapeChar !== undefined) {
@@ -69,21 +70,24 @@ const polarsScanCsvOptionsFromDp = (
   }
 
   return {
+    // CSV Dialect
     hasHeader: opts.header,
     sep: opts.delimiter,
-    commentChar: opts.commentChar,
+    commentChar: opts.commentChar, // undefined => no comments
     quoteChar: opts.quoteChar,
     nullValues: [],
     encoding: "utf8",
 
-    // Impl things
+    // Read options
     inferSchemaLength: 0,
     skipRows: 0,
     skipRowsAfterHeader: 0,
+    nRows: -1,
+
+    // Polars things (from defaults)
     ignoreErrors: false,
     cache: true,
     rechunk: false,
-    nRows: -1,
     lowMemory: false,
     parseDates: false,
   };

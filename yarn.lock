@@ -1069,6 +1069,7 @@ __metadata:
     prettier: "npm:^3.1.0"
     ts-pattern: "npm:^5.0.6"
     typescript: "npm:^5.3.3"
+    utility-types: "npm:^3.10.0"
     vitest: "npm:^0.34.6"
     zod: "npm:^3.22.4"
   languageName: unknown
@@ -3085,6 +3086,13 @@ __metadata:
   dependencies:
     punycode: "npm:^2.1.0"
   checksum: 4ef57b45aa820d7ac6496e9208559986c665e49447cb072744c13b66925a362d96dd5a46c4530a6b8e203e5db5fe849369444440cb22ecfc26c679359e5dfa3c
+  languageName: node
+  linkType: hard
+
+"utility-types@npm:^3.10.0":
+  version: 3.10.0
+  resolution: "utility-types@npm:3.10.0"
+  checksum: 79a6f7ea0cdd4fcafcec8c6e68e1e0cfa657e414b6f1696552d89ae70a3634b12ac6c16b7a0a3bfdb0a222ebc3d9a7649f2de434a78f2d65d318b50f314a85e4
   languageName: node
   linkType: hard
 
