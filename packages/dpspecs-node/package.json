@@ -1,0 +1,10 @@
+{
+  "name": "@dpspecs/node",
+  "packageManager": "yarn@4.0.2",
+  "version": "0.0.1",
+  "main": "dist/src",
+  "types": "dist/src",
+  "dependencies": {
+    "@dpspecs/core": "0.0.1"
+  }
+}

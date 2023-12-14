@@ -8,6 +8,9 @@
       "path": "./packages/dpspecs-core"
     },
     {
+      "path": "./packages/dpspecs-node"
+    },
+    {
       "path": "./packages/dpspecs-plugin-nodejs-polars"
     }
   ]

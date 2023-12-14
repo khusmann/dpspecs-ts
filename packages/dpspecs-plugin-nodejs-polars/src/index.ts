@@ -1,9 +1,10 @@
 import * as d from "@dpspecs/core";
 import * as pl from "nodejs-polars";
 import { match, P } from "ts-pattern";
+import * as path from "path";
 import { z } from "zod";
 
-export const polarsTypeFromDp = (field: d.Field): pl.DataType =>
+const polarsTypeFromDp = (field: d.Field): pl.DataType =>
   match(field)
     .with({ type: "string" }, () => pl.DataType.Utf8)
     .with({ type: "boolean" }, () => pl.DataType.Bool)
@@ -24,40 +25,195 @@ export const polarsTypeFromDp = (field: d.Field): pl.DataType =>
     .with({ type: "yearmonth" }, () => pl.DataType.Date)
     .exhaustive();
 
+const polarsScanCsvOptionsFromDp = (
+  dialect: d.CsvDialect | undefined,
+  encoding: string | undefined
+): Partial<pl.ScanCsvOptions> => {
+  const opts = { ...d.csvDialectDefaults, ...dialect };
+
+  if (opts.escapeChar !== undefined) {
+    throw new Error("escapeChar not supported");
+  }
+
+  if (opts.doubleQuote !== undefined && opts.doubleQuote !== true) {
+    throw new Error("doubleQuote = false not supported");
+  }
+
+  if (opts.nullSequence !== undefined) {
+    throw new Error("nullSequence not supported");
+  }
+
+  if (opts.skipInitialSpace !== undefined && opts.skipInitialSpace !== false) {
+    throw new Error("skipInitialSpace = true not supported");
+  }
+
+  if (
+    opts.lineTerminator !== undefined &&
+    opts.lineTerminator !== "\r\n" &&
+    opts.lineTerminator !== "\n"
+  ) {
+    throw new Error(
+      `Nonstandard line terminator not supported ({opts.lineTerminator})`
+    );
+  }
+
+  if (
+    opts.caseSensitiveHeader !== undefined &&
+    opts.caseSensitiveHeader !== false
+  ) {
+    throw new Error("caseSensitiveHeader = true not supported");
+  }
+
+  if (encoding !== undefined && encoding !== "utf8" && encoding !== "utf-8") {
+    throw new Error(`Encoding not supported ({encoding})`);
+  }
+
+  return {
+    hasHeader: opts.header,
+    sep: opts.delimiter,
+    commentChar: opts.commentChar,
+    quoteChar: opts.quoteChar,
+    nullValues: [],
+    encoding: "utf8",
+
+    // Impl things
+    inferSchemaLength: 0,
+    skipRows: 0,
+    skipRowsAfterHeader: 0,
+    ignoreErrors: false,
+    cache: true,
+    rechunk: false,
+    nRows: -1,
+    lowMemory: false,
+    parseDates: false,
+  };
+};
+
 const resolveDescriptor = async <T extends z.ZodTypeAny>(
   descriptor: unknown,
   parser: T
 ): Promise<z.infer<T> | undefined> => {
   if (typeof descriptor === "string") {
+    // TODO: implement fetch
     throw new Error("Fetch not implemented");
   } else {
     return parser.parse(descriptor);
   }
 };
 
-export const readResourcePolars = async (
-  resource: d.Resource
-): Promise<pl.DataFrame> => {
-  const dpSchema = (await resolveDescriptor(
-    resource.schema,
-    d.tableSchema
-  )) ?? { fields: [] };
+const scanPathResource =
+  (rootDir: string) =>
+  async (resource: d.PathResource): Promise<pl.LazyDataFrame> => {
+    const result = await tryScanPathCsv(resource, rootDir);
 
-  const dtypes = dpSchema.fields.reduce(
-    (acc, field) => {
-      const polarsType = polarsTypeFromDp(field);
-      return {
-        ...acc,
-        [field.name]: polarsType,
-      };
-    },
-    {} as Record<string, pl.DataType>
+    if (result === undefined) {
+      throw new Error("Unable to scan path resource");
+    }
+
+    return result;
+  };
+
+const tryScanPathCsv = async (
+  resource: d.PathResource,
+  rootDir: string
+): Promise<pl.LazyDataFrame | undefined> => {
+  const paths =
+    typeof resource.path === "string" ? [resource.path] : resource.path;
+
+  const absPaths = paths.map((p) => path.join(rootDir, p));
+
+  // Verify format is CSV
+  if (resource.format === undefined) {
+    // If no resource format given, make sure all paths end with .csv
+    if (!absPaths.every((p) => p.endsWith(".csv"))) {
+      return undefined;
+    }
+  } else {
+    // If resource format given, make sure it's csv
+    if (resource.format !== "csv") {
+      return undefined;
+    }
+  }
+
+  // TODO: resolve URLs if necessary
+
+  const polarsScanOptions = polarsScanCsvOptionsFromDp(
+    resource.dialect,
+    resource.encoding
   );
 
-  return match(resource)
-    .with(P._, d.isPathResource, ({ path }) => pl.readCSV(path, { dtypes }))
-    .with(P._, d.isInlineResource, ({ data }) => {
-      throw new Error("Not implemented");
-    })
+  if (absPaths.length === 1) {
+    return pl.scanCSV(absPaths[0], polarsScanOptions);
+  } else {
+    const allData = await Promise.all(
+      absPaths.map((p) => pl.scanCSV(p, polarsScanOptions).collect())
+    );
+    // TODO: concat really should accept LazyFrames...
+    return pl.concat(allData).lazy();
+  }
+};
+
+const scanInlineResource = async (
+  resource: d.InlineResource
+): Promise<pl.LazyDataFrame> => {
+  const result =
+    (await tryScanInlineRecordRows(resource)) ??
+    (await tryScanInlineArrayRows(resource)) ??
+    (await tryScanInlineCsv(resource));
+
+  if (result === undefined) {
+    throw new Error("Unable to scan inline resource");
+  }
+
+  return result;
+};
+
+const tryScanInlineRecordRows = async (
+  resource: d.InlineResource
+): Promise<pl.LazyDataFrame | undefined> => {
+  return undefined;
+};
+
+const tryScanInlineArrayRows = async (
+  resource: d.InlineResource
+): Promise<pl.LazyDataFrame | undefined> => {
+  return undefined;
+};
+
+const tryScanInlineCsv = async (
+  resource: d.InlineResource
+): Promise<pl.LazyDataFrame | undefined> => {
+  return undefined;
+};
+
+export const scanResourcePolarsRaw = async (
+  resource: d.Resource,
+  rootDir: string
+): Promise<pl.LazyDataFrame> =>
+  match(resource)
+    .with(P._, d.isPathResource, scanPathResource(rootDir))
+    .with(P._, d.isInlineResource, scanInlineResource)
     .exhaustive();
+
+export const readResourcePolarsRaw = async (
+  resource: d.Resource,
+  rootDir: string
+): Promise<pl.DataFrame> => {
+  const scannedResource = await scanResourcePolarsRaw(resource, rootDir);
+  return await scannedResource.collect();
+};
+
+export const scanResourcePolars = async (
+  resource: d.Resource,
+  rootDir: string
+): Promise<pl.LazyDataFrame> => {
+  return await scanResourcePolarsRaw(resource, rootDir);
+};
+
+export const readResourcePolars = async (
+  resource: d.Resource,
+  rootDir: string
+): Promise<pl.DataFrame> => {
+  const scannedResource = await scanResourcePolars(resource, rootDir);
+  return await scannedResource.collect();
 };

@@ -20,11 +20,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dpspecs/node@npm:0.0.1, @dpspecs/node@workspace:packages/dpspecs-node":
+  version: 0.0.0-use.local
+  resolution: "@dpspecs/node@workspace:packages/dpspecs-node"
+  dependencies:
+    "@dpspecs/core": "npm:0.0.1"
+  languageName: unknown
+  linkType: soft
+
 "@dpspecs/plugin-nodejs-polars@workspace:packages/dpspecs-plugin-nodejs-polars":
   version: 0.0.0-use.local
   resolution: "@dpspecs/plugin-nodejs-polars@workspace:packages/dpspecs-plugin-nodejs-polars"
   dependencies:
     "@dpspecs/core": "npm:0.0.1"
+    "@dpspecs/node": "npm:0.0.1"
     nodejs-polars: "npm:^0.8.3"
   languageName: unknown
   linkType: soft

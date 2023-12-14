@@ -16,9 +16,6 @@
   "references": [
     {
       "path": "../dpspecs-core"
-    },
-    {
-      "path": "../dpspecs-node"
     }
   ]
 }

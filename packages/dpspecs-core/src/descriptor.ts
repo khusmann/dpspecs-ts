@@ -72,7 +72,7 @@ export const objectField = baseField.extend({
   type: z.literal("object"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.record(z.any())).optional(),
+      enum: z.array(z.record(z.unknown())).optional(),
       minLength: z.number().int().optional(),
       maxLength: z.number().int().optional(),
     })
@@ -97,7 +97,7 @@ export const dateField = baseField.extend({
   type: z.literal("date"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.any()).optional(),
+      enum: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
@@ -106,7 +106,7 @@ export const datetimeField = baseField.extend({
   type: z.literal("datetime"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.any()).optional(),
+      enum: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
@@ -115,7 +115,7 @@ export const durationField = baseField.extend({
   type: z.literal("duration"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.any()).optional(),
+      enum: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
@@ -124,7 +124,7 @@ export const geojsonField = baseField.extend({
   type: z.literal("geojson"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.any()).optional(),
+      enum: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
@@ -133,7 +133,7 @@ export const geopointField = baseField.extend({
   type: z.literal("geopoint"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.any()).optional(),
+      enum: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
@@ -142,7 +142,7 @@ export const timeField = baseField.extend({
   type: z.literal("time"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.any()).optional(),
+      enum: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
@@ -151,7 +151,7 @@ export const yearField = baseField.extend({
   type: z.literal("year"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.any()).optional(),
+      enum: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
@@ -160,7 +160,7 @@ export const yearmonthField = baseField.extend({
   type: z.literal("yearmonth"),
   constraints: baseConstraints
     .extend({
-      enum: z.array(z.any()).optional(),
+      enum: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
@@ -244,7 +244,7 @@ export const csvDialect = z
   })
   .passthrough();
 
-export const csvDialectDefaults: Partial<CsvDialect> = {
+export const csvDialectDefaults = {
   delimiter: ",",
   lineTerminator: "\r\n",
   quoteChar: '"',
@@ -276,21 +276,25 @@ export const resourceBase = z
     sources: z.array(source).optional(),
     contributors: z.array(contributor).optional(),
     dialect: csvDialect.optional(),
-    schema: z.record(z.any()).or(z.string()).optional(),
+    schema: z.record(z.unknown()).or(z.string()).optional(),
   })
   .passthrough();
 
 export const pathResource = resourceBase
   .extend({
-    path: z.string(),
+    path: z.string().or(z.array(z.string()).nonempty()),
   })
   .passthrough();
 
 export const inlineResource = resourceBase
   .extend({
-    data: z.any(),
+    data: z.unknown(),
   })
   .passthrough();
+
+export const inlineDataRecordRows = z.array(z.record(z.coerce.string()));
+
+export const inlineDataArrayRows = z.array(z.array(z.coerce.string()));
 
 export const resource = z.union([pathResource, inlineResource]);
 
@@ -353,4 +357,6 @@ export type CsvDialect = z.infer<typeof csvDialect>;
 export type PathResource = z.infer<typeof pathResource>;
 export type InlineResource = z.infer<typeof inlineResource>;
 export type Resource = z.infer<typeof resource>;
+export type InlineDataArrayRows = z.infer<typeof inlineDataArrayRows>;
+export type InlineDataRecordRows = z.infer<typeof inlineDataRecordRows>;
 export type DataPackage = z.infer<typeof dataPackage>;
