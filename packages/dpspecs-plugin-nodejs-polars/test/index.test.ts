@@ -1,4 +1,4 @@
-import { readResourcePolarsRaw } from "../src";
+import { readResourceRaw } from "../src";
 import { expect, test } from "vitest";
 import { readDescriptor } from "@dpspecs/node";
 import * as d from "@dpspecs/core";
@@ -12,7 +12,7 @@ test("Test read", async () => {
 
   const descriptor = await readDescriptor(d.dataPackage, packagePath);
 
-  const df = await readResourcePolarsRaw(descriptor.resources[0], rootDir);
+  const df = await readResourceRaw(descriptor.resources[0], rootDir);
 
   console.log(df);
 

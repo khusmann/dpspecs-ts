@@ -5,7 +5,7 @@ import { Optional } from "utility-types";
 import * as path from "path";
 import { z } from "zod";
 
-const polarsTypeFromDp = (field: d.Field): pl.DataType =>
+const typeFromDp = (field: d.Field): pl.DataType =>
   match(field)
     .with({ type: "string" }, () => pl.DataType.Utf8)
     .with({ type: "boolean" }, () => pl.DataType.Bool)
@@ -26,7 +26,7 @@ const polarsTypeFromDp = (field: d.Field): pl.DataType =>
     .with({ type: "yearmonth" }, () => pl.DataType.Date)
     .exhaustive();
 
-const polarsScanCsvOptionsFromDp = (
+const scanCsvOptionsFromDp = (
   dialect: d.CsvDialect | undefined,
   encoding: string | undefined
 ): Optional<pl.ScanCsvOptions, "commentChar"> => {
@@ -58,6 +58,7 @@ const polarsScanCsvOptionsFromDp = (
     );
   }
 
+  // TODO: support caseSensitiveHeader?
   if (
     opts.caseSensitiveHeader !== undefined &&
     opts.caseSensitiveHeader !== false
@@ -141,7 +142,7 @@ const tryScanPathCsv = async (
 
   // TODO: resolve URLs if necessary
 
-  const polarsScanOptions = polarsScanCsvOptionsFromDp(
+  const polarsScanOptions = scanCsvOptionsFromDp(
     resource.dialect,
     resource.encoding
   );
@@ -190,7 +191,7 @@ const tryScanInlineCsv = async (
   return undefined;
 };
 
-export const scanResourcePolarsRaw = async (
+export const scanResourceRaw = async (
   resource: d.Resource,
   rootDir: string
 ): Promise<pl.LazyDataFrame> =>
@@ -199,25 +200,25 @@ export const scanResourcePolarsRaw = async (
     .with(P._, d.isInlineResource, scanInlineResource)
     .exhaustive();
 
-export const readResourcePolarsRaw = async (
+export const readResourceRaw = async (
   resource: d.Resource,
   rootDir: string
 ): Promise<pl.DataFrame> => {
-  const scannedResource = await scanResourcePolarsRaw(resource, rootDir);
+  const scannedResource = await scanResourceRaw(resource, rootDir);
   return await scannedResource.collect();
 };
 
-export const scanResourcePolars = async (
+export const scanResource = async (
   resource: d.Resource,
   rootDir: string
 ): Promise<pl.LazyDataFrame> => {
-  return await scanResourcePolarsRaw(resource, rootDir);
+  return await scanResourceRaw(resource, rootDir);
 };
 
-export const readResourcePolars = async (
+export const readResource = async (
   resource: d.Resource,
   rootDir: string
 ): Promise<pl.DataFrame> => {
-  const scannedResource = await scanResourcePolars(resource, rootDir);
+  const scannedResource = await scanResource(resource, rootDir);
   return await scannedResource.collect();
 };
