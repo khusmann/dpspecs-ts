@@ -1,6 +1,6 @@
 import { readResourceRaw } from "../src";
 import { expect, test } from "vitest";
-import { readDescriptor } from "@dpspecs/node";
+import { resolveDescriptor } from "@dpspecs/node";
 import * as d from "@dpspecs/core";
 import * as fs from "fs";
 import * as path from "path";
@@ -10,7 +10,7 @@ test("Test read", async () => {
 
   const packagePath = path.join(rootDir, "datapackage.json");
 
-  const descriptor = await readDescriptor(d.dataPackage, packagePath);
+  const descriptor = await resolveDescriptor(d.dataPackage, packagePath);
 
   const df = await readResourceRaw(descriptor.resources[0], rootDir);
 

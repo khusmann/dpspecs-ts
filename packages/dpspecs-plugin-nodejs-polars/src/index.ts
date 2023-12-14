@@ -1,4 +1,5 @@
 import * as d from "@dpspecs/core";
+import { resolveDescriptor } from "@dpspecs/node";
 import * as pl from "nodejs-polars";
 import { match, P } from "ts-pattern";
 import { Optional } from "utility-types";
@@ -94,18 +95,6 @@ const scanCsvOptionsFromDp = (
   };
 };
 
-const resolveDescriptor = async <T extends z.ZodTypeAny>(
-  descriptor: unknown,
-  parser: T
-): Promise<z.infer<T> | undefined> => {
-  if (typeof descriptor === "string") {
-    // TODO: implement fetch
-    throw new Error("Fetch not implemented");
-  } else {
-    return parser.parse(descriptor);
-  }
-};
-
 const scanPathResource =
   (rootDir: string) =>
   async (resource: d.PathResource): Promise<pl.LazyDataFrame> => {
@@ -153,7 +142,7 @@ const tryScanPathCsv = async (
     const allData = await Promise.all(
       absPaths.map((p) => pl.scanCSV(p, polarsScanOptions).collect())
     );
-    // TODO: concat really should accept LazyFrames...
+    // TODO: change this when concat accepts lazyframes natively
     return pl.concat(allData).lazy();
   }
 };

@@ -1,7 +1,7 @@
 import * as fs from "fs/promises";
 import { z } from "zod";
 
-export const readDescriptor = async <T extends z.ZodTypeAny>(
+export const resolveDescriptor = async <T extends z.ZodTypeAny>(
   parser: T,
   pathOrObject: unknown
 ): Promise<z.infer<T>> => {
