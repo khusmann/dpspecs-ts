@@ -1,8 +1,7 @@
-import { readResourceRaw, readResource } from "../src";
+import { scanResourceData } from "../src";
 import { expect, test } from "vitest";
-import { resolveDescriptor } from "@dpspecs/node";
+import { readDataPackage } from "@dpspecs/node";
 import * as d from "@dpspecs/core";
-import * as fs from "fs";
 import * as path from "path";
 
 test("Test read", async () => {
@@ -10,11 +9,13 @@ test("Test read", async () => {
 
   const packagePath = path.join(rootDir, "datapackage.json");
 
-  const descriptor = await resolveDescriptor(d.dataPackage, packagePath);
+  const dpkg = await readDataPackage(packagePath);
 
-  const df = await readResource(descriptor.resources[1], rootDir);
+  const df = await scanResourceData(dpkg.resources[0].data);
 
-  console.log(df);
+  const df_collected = await df.collect();
+
+  console.log(df_collected);
 
   expect(true).toBeTruthy();
 });

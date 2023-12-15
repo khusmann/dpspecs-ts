@@ -1,10 +1,6 @@
-import * as d from "@dpspecs/core";
-import { resolveDescriptor } from "@dpspecs/node";
+import { descriptor as d, model as m } from "@dpspecs/core";
 import * as pl from "nodejs-polars";
-import { match, P } from "ts-pattern";
-import { Optional } from "utility-types";
-import * as path from "path";
-import { z } from "zod";
+import { match } from "ts-pattern";
 
 const typeFromDp = (field: d.Field): pl.DataType =>
   match(field)
@@ -88,6 +84,89 @@ const csvOptionsFromDp = (dialect: d.CsvDialect | undefined) => {
   };
 };
 
+const scanPathDataHelper = (
+  path: m.Path,
+  format: string | undefined,
+  dialect: d.CsvDialect | undefined,
+  encoding: string | undefined
+): Promise<pl.LazyDataFrame> => {
+  if (format !== undefined) {
+    if (!path.absPath.endsWith(".csv")) {
+      throw new Error(`Unsupported format ({path.absPath})`);
+    }
+  } else {
+    if (format !== "csv") {
+      throw new Error(`Unsupported format ({format})`);
+    }
+  }
+
+  if (encoding !== "utf8" && encoding !== "utf-8") {
+    throw new Error(`Unsupported encoding ({encoding})`);
+  }
+
+  const scanOptions = csvOptionsFromDp(dialect);
+
+  return match(path)
+    .with({ _tag: "localPath" }, async ({ absPath }) =>
+      pl.scanCSV(absPath, scanOptions)
+    )
+    .with(
+      { _tag: "remotePath" },
+      { _tag: "absRemotePath" },
+      async ({ absPath }) => {
+        const response = await fetch(absPath);
+        const buffer = Buffer.from(await response.arrayBuffer());
+        return pl.readCSV(buffer, scanOptions).lazy();
+      }
+    )
+    .exhaustive();
+};
+
+const scanPathData = async (data: m.PathData): Promise<pl.LazyDataFrame> => {
+  const paths = data.pathsArray;
+
+  if (paths.length === 0) {
+    throw new Error("No data paths specified in resource");
+  } else if (paths.length === 1) {
+    return await scanPathDataHelper(
+      paths[0],
+      data.format,
+      data.csvDialect,
+      data.encoding
+    );
+  } else {
+    const scannedData = await Promise.all(
+      paths.map((p) =>
+        scanPathDataHelper(p, data.format, data.csvDialect, data.encoding)
+      )
+    );
+    const collectedData = await Promise.all(
+      scannedData.map((df) => df.collect())
+    );
+    return pl.concat(collectedData).lazy();
+  }
+};
+
+const scanInlineData = async (
+  data: m.InlineData
+): Promise<pl.LazyDataFrame> => {
+  throw new Error("Inline data not supported yet");
+};
+
+export const scanResourceData = (
+  data: m.ResourceData
+): Promise<pl.LazyDataFrame> =>
+  match(data)
+    .with({ _tag: "pathData" }, scanPathData)
+    .with(
+      { _tag: "inlineDataString" },
+      { _tag: "inlineDataArrayRows" },
+      { _tag: "inlineDataRecordRows" },
+      scanInlineData
+    )
+    .exhaustive();
+
+/*
 const scanPathResource =
   (rootDir: string) =>
   async (resource: d.Resource): Promise<pl.LazyDataFrame> => {
@@ -307,3 +386,4 @@ export const readResource = async (
     missing: await scannedResource.missing.collect(),
   };
 };
+*/

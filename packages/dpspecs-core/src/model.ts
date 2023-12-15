@@ -4,53 +4,57 @@ import { z } from "zod";
 export interface LocalPath {
   _tag: "localPath";
   relPath: string;
-  rootDir: string;
+  basePath: string;
+  absPath: string;
   toDescriptor(): string;
 }
 
-export const localPath = (relPath: string, rootDir: string): LocalPath => ({
+export const localPath = (relPath: string, basePath: string): LocalPath => ({
   _tag: "localPath",
   relPath,
-  rootDir,
+  basePath,
+  absPath: `${basePath}/${relPath}`,
   toDescriptor: () => relPath,
 });
 
 export interface RemotePath {
   _tag: "remotePath";
-  relUrl: string;
-  rootUrl: string;
+  relPath: string;
+  basePath: string;
+  absPath: string;
   toDescriptor(): string;
 }
 
-export const remotePath = (relUrl: string, rootUrl: string): RemotePath => ({
+export const remotePath = (relPath: string, basePath: string): RemotePath => ({
   _tag: "remotePath",
-  relUrl,
-  rootUrl,
-  toDescriptor: () => relUrl,
+  relPath: relPath,
+  basePath: basePath,
+  absPath: `${basePath}/${relPath}`,
+  toDescriptor: () => relPath,
 });
 
 export interface AbsRemotePath {
   _tag: "absRemotePath";
-  url: string;
+  absPath: string;
   toDescriptor(): string;
 }
 
-export const absRemotePath = (url: string): AbsRemotePath => ({
+export const absRemotePath = (absPath: string): AbsRemotePath => ({
   _tag: "absRemotePath",
-  url,
-  toDescriptor: () => url,
+  absPath,
+  toDescriptor: () => absPath,
 });
 
 export type Path = LocalPath | RemotePath | AbsRemotePath;
 
-export const parsePathStr = (path: string, rootDir: string): Path => {
-  if (isRemotePath(path)) {
-    return absRemotePath(path);
+export const parsePathStr = (pathStr: string, basePath: string): Path => {
+  if (isRemotePath(pathStr)) {
+    return absRemotePath(pathStr);
   } else {
-    if (isRemotePath(rootDir)) {
-      return remotePath(path, rootDir);
+    if (isRemotePath(basePath)) {
+      return remotePath(pathStr, basePath);
     } else {
-      return localPath(path, rootDir);
+      return localPath(pathStr, basePath);
     }
   }
 };
@@ -58,23 +62,36 @@ export const parsePathStr = (path: string, rootDir: string): Path => {
 export interface PathData {
   _tag: "pathData";
   paths: Path | Path[];
-  format?: string;
+  format: string | undefined;
+  csvDialect: d.CsvDialect | undefined;
+  encoding: string | undefined;
   toProps(): {
     path: string | string[];
     format?: string;
+    csvDialect: d.CsvDialect | undefined;
+    encoding: string | undefined;
   };
   get pathsArray(): Path[];
 }
 
-export const pathData = (paths: Path | Path[], format?: string): PathData => ({
+export const pathData = (
+  paths: Path | Path[],
+  format: string | undefined,
+  csvDialect: d.CsvDialect | undefined,
+  encoding: string | undefined
+): PathData => ({
   _tag: "pathData",
   paths,
   format,
+  csvDialect,
+  encoding,
   toProps: () => ({
     path: Array.isArray(paths)
       ? paths.map((p) => p.toDescriptor())
       : paths.toDescriptor(),
     format,
+    csvDialect,
+    encoding,
   }),
   get pathsArray(): Path[] {
     return Array.isArray(paths) ? paths : [paths];
@@ -85,29 +102,39 @@ export interface InlineDataString {
   _tag: "inlineDataString";
   data: string;
   format: string;
+  csvDialect: d.CsvDialect | undefined;
+  encoding: string | undefined;
   toProps(): {
     data: string;
     format: string;
+    csvDialect?: d.CsvDialect;
+    encoding?: string;
   };
 }
 
 export const inlineDataString = (
   data: string,
-  format: string
+  format: string,
+  csvDialect: d.CsvDialect | undefined,
+  encoding: string | undefined
 ): InlineDataString => ({
   _tag: "inlineDataString",
   data,
   format,
+  csvDialect,
+  encoding,
   toProps: () => ({
     data,
     format,
+    csvDialect,
+    encoding,
   }),
 });
 
 export interface InlineDataRecordRows {
   _tag: "inlineDataRecordRows";
   data: Array<Record<string, string>>;
-  format?: "json" | "inline";
+  format: "json" | "inline" | undefined;
   toProps(): {
     data: Array<Record<string, string>>;
     format?: "json" | "inline";
@@ -116,7 +143,7 @@ export interface InlineDataRecordRows {
 
 export const inlineDataRecordRows = (
   data: Array<Record<string, string>>,
-  format?: "json" | "inline"
+  format: "json" | "inline" | undefined
 ): InlineDataRecordRows => ({
   _tag: "inlineDataRecordRows",
   data,
@@ -130,16 +157,16 @@ export const inlineDataRecordRows = (
 export interface InlineDataArrayRows {
   _tag: "inlineDataArrayRows";
   data: Array<Array<string>>;
-  format?: "json" | "inline";
+  format: "json" | "inline" | undefined;
   toProps(): {
     data: Array<Array<string>>;
-    format?: "json" | "inline";
+    format: "json" | "inline" | undefined;
   };
 }
 
 export const inlineDataArrayRows = (
   data: Array<Array<string>>,
-  format?: "json" | "inline"
+  format: "json" | "inline" | undefined
 ): InlineDataArrayRows => ({
   _tag: "inlineDataArrayRows",
   data,
@@ -150,11 +177,12 @@ export const inlineDataArrayRows = (
   }),
 });
 
-export type ResourceData =
-  | PathData
+export type InlineData =
   | InlineDataString
   | InlineDataRecordRows
   | InlineDataArrayRows;
+
+export type ResourceData = PathData | InlineData;
 
 export interface PathSchema {
   _tag: "pathSchema";
@@ -191,7 +219,7 @@ type StrictResource = z.infer<typeof strictResource>;
 
 type ResourceProps = Omit<
   StrictResource,
-  "data" | "format" | "schema" | "path"
+  "data" | "format" | "schema" | "path" | "dialect" | "encoding"
 >;
 
 export interface Resource {
@@ -246,6 +274,27 @@ type ParseContext = {
 const isRemotePath = (path: string): boolean =>
   path.startsWith("http") || path.startsWith("https");
 
+export const parseDataPackage = async (
+  descriptor: unknown,
+  ctx: ParseContext
+): Promise<DataPackage> => {
+  if (typeof descriptor === "string") {
+    const path = parsePathStr(descriptor, ctx.rootDir);
+    const content = await ctx.fetchPathFn(path);
+    return await parseDataPackage(JSON.parse(content), ctx);
+  }
+
+  const parsedDescriptor = d.dataPackage.parse(descriptor) as StrictDataPackage;
+
+  const { resources: _, ...parsedDescriptorProps } = parsedDescriptor;
+
+  const parsedResources = await Promise.all(
+    parsedDescriptor.resources.map((r) => parseResource(r, ctx))
+  );
+
+  return dataPackage(parsedDescriptorProps, parsedResources);
+};
+
 export const parseResource = async (
   descriptor: unknown,
   ctx: ParseContext
@@ -254,9 +303,11 @@ export const parseResource = async (
 
   const {
     schema,
+    path,
     data: _,
     format: __,
-    path,
+    dialect: ___,
+    encoding: ____,
     ...parsedDescriptorProps
   } = parsedDescriptor;
 
@@ -285,7 +336,12 @@ const parseResourceDataHelper = (
       ? descriptor.path.map((p) => parsePathStr(p, ctx.rootDir))
       : parsePathStr(descriptor.path, ctx.rootDir);
 
-    return pathData(path, descriptor.format);
+    return pathData(
+      path,
+      descriptor.format,
+      descriptor.dialect,
+      descriptor.encoding
+    );
   }
 
   if (descriptor.path === undefined && descriptor.data !== undefined) {
@@ -294,7 +350,12 @@ const parseResourceDataHelper = (
       if (descriptor.format === undefined) {
         throw new Error("Raw inline data must have format");
       }
-      return inlineDataString(descriptor.data, descriptor.format);
+      return inlineDataString(
+        descriptor.data,
+        descriptor.format,
+        descriptor.dialect,
+        descriptor.encoding
+      );
     } else {
       const format = descriptor.format;
       if (format !== undefined && format !== "json" && format !== "inline") {
