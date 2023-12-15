@@ -143,6 +143,7 @@ const scanPathData = async (data: m.PathData): Promise<pl.LazyDataFrame> => {
     const collectedData = await Promise.all(
       scannedData.map((df) => df.collect())
     );
+    // TODO: change this when concat accepts lazyframes natively
     return pl.concat(collectedData).lazy();
   }
 };
@@ -153,10 +154,10 @@ const scanInlineData = async (
   throw new Error("Inline data not supported yet");
 };
 
-export const scanResourceData = (
+export const scanResourceData = async (
   data: m.ResourceData
-): Promise<pl.LazyDataFrame> =>
-  match(data)
+): Promise<pl.LazyDataFrame> => {
+  const scannedData = await match(data)
     .with({ _tag: "pathData" }, scanPathData)
     .with(
       { _tag: "inlineDataString" },
@@ -165,6 +166,14 @@ export const scanResourceData = (
       scanInlineData
     )
     .exhaustive();
+
+  // Replace null values with empty string ("")
+  return scannedData.select(
+    scannedData.columns.map((c) =>
+      pl.when(pl.col(c).isNull()).then(pl.lit("")).otherwise(pl.col(c)).alias(c)
+    )
+  );
+};
 
 /*
 const scanPathResource =

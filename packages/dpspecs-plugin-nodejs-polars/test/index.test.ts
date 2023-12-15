@@ -11,7 +11,7 @@ test("Test read", async () => {
 
   const dpkg = await readDataPackage(packagePath);
 
-  const df = await scanResourceData(dpkg.resources[0].data);
+  const df = await scanResourceData(dpkg.resources[1].data);
 
   const df_collected = await df.collect();
 
