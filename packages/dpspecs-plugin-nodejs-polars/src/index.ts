@@ -90,7 +90,7 @@ const csvOptionsFromDp = (dialect: d.CsvDialect | undefined) => {
 
 const scanPathResource =
   (rootDir: string) =>
-  async (resource: d.PathResource): Promise<pl.LazyDataFrame> => {
+  async (resource: d.Resource): Promise<pl.LazyDataFrame> => {
     const result = await tryScanPathCsv(resource, rootDir);
 
     if (result === undefined) {
@@ -142,7 +142,7 @@ const scanUrlCsvHelper = async (
 };
 
 const tryScanPathCsv = async (
-  resource: d.PathResource,
+  resource: d.Resource,
   rootDir: string
 ): Promise<pl.LazyDataFrame | undefined> => {
   const paths =
@@ -184,7 +184,7 @@ const tryScanPathCsv = async (
 };
 
 const scanInlineResource = async (
-  resource: d.InlineResource
+  resource: d.Resource
 ): Promise<pl.LazyDataFrame> => {
   const result =
     (await tryScanInlineRecordRows(resource)) ??
@@ -199,19 +199,19 @@ const scanInlineResource = async (
 };
 
 const tryScanInlineRecordRows = async (
-  resource: d.InlineResource
+  resource: d.Resource
 ): Promise<pl.LazyDataFrame | undefined> => {
   return undefined;
 };
 
 const tryScanInlineArrayRows = async (
-  resource: d.InlineResource
+  resource: d.Resource
 ): Promise<pl.LazyDataFrame | undefined> => {
   return undefined;
 };
 
 const tryScanInlineCsv = async (
-  resource: d.InlineResource
+  resource: d.Resource
 ): Promise<pl.LazyDataFrame | undefined> => {
   return undefined;
 };

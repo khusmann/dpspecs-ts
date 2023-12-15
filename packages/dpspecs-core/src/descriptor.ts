@@ -257,7 +257,11 @@ export const csvDialectDefaults = {
   csvddfVersion: "1.2",
 };
 
-export const resourceBase = z
+export const inlineDataRecordRows = z.array(z.record(z.coerce.string()));
+
+export const inlineDataArrayRows = z.array(z.array(z.coerce.string()));
+
+export const resource = z
   .object({
     name: z.string(),
     profile: z.string().optional(),
@@ -277,33 +281,10 @@ export const resourceBase = z
     contributors: z.array(contributor).optional(),
     dialect: csvDialect.optional(),
     schema: z.record(z.unknown()).or(z.string()).optional(),
-  })
-  .passthrough();
-
-export const pathResource = resourceBase
-  .extend({
-    path: z.string().or(z.array(z.string()).nonempty()),
-  })
-  .passthrough();
-
-export const inlineResource = resourceBase
-  .extend({
+    path: z.string().or(z.array(z.string())).optional(),
     data: z.unknown(),
   })
   .passthrough();
-
-export const inlineDataRecordRows = z.array(z.record(z.coerce.string()));
-
-export const inlineDataArrayRows = z.array(z.array(z.coerce.string()));
-
-export const resource = z.union([pathResource, inlineResource]);
-
-export const isPathResource = (resource: Resource): resource is PathResource =>
-  "path" in resource;
-
-export const isInlineResource = (
-  resource: Resource
-): resource is InlineResource => "data" in resource;
 
 export const license = z
   .object({
@@ -327,7 +308,7 @@ export const dataPackage = z
     keywords: z.array(z.string()).optional(),
     image: z.string().optional(),
     created: z.string().datetime().optional(),
-    resources: z.array(resource).nonempty(),
+    resources: z.array(resource),
   })
   .passthrough();
 
@@ -354,8 +335,6 @@ export type Source = z.infer<typeof source>;
 export type Contributor = z.infer<typeof contributor>;
 export type License = z.infer<typeof license>;
 export type CsvDialect = z.infer<typeof csvDialect>;
-export type PathResource = z.infer<typeof pathResource>;
-export type InlineResource = z.infer<typeof inlineResource>;
 export type Resource = z.infer<typeof resource>;
 export type InlineDataArrayRows = z.infer<typeof inlineDataArrayRows>;
 export type InlineDataRecordRows = z.infer<typeof inlineDataRecordRows>;
