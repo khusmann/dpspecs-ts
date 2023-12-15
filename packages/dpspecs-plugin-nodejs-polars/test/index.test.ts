@@ -1,7 +1,6 @@
-import { scanResourceData } from "../src";
+import { readResource } from "../src";
 import { expect, test } from "vitest";
 import { readDataPackage } from "@dpspecs/node";
-import * as d from "@dpspecs/core";
 import * as path from "path";
 
 test("Test read", async () => {
@@ -11,11 +10,9 @@ test("Test read", async () => {
 
   const dpkg = await readDataPackage(packagePath);
 
-  const df = await scanResourceData(dpkg.resources[1].data);
+  const df = await readResource(dpkg.resources[1]);
 
-  const df_collected = await df.collect();
-
-  console.log(df_collected);
+  console.log(df);
 
   expect(true).toBeTruthy();
 });

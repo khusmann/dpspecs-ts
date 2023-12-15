@@ -175,160 +175,6 @@ export const scanResourceData = async (
   );
 };
 
-/*
-const scanPathResource =
-  (rootDir: string) =>
-  async (resource: d.Resource): Promise<pl.LazyDataFrame> => {
-    const result = await tryScanPathCsv(resource, rootDir);
-
-    if (result === undefined) {
-      throw new Error("Unable to scan path resource");
-    }
-
-    return result;
-  };
-
-const isUrl = (path: string): boolean =>
-  path.startsWith("http") || path.startsWith("https");
-
-const scanPathCsvHelper = async (
-  relPath: string,
-  rootDir: string,
-  dialect: d.CsvDialect | undefined
-): Promise<pl.LazyDataFrame> => {
-  if (relPath.startsWith("/")) {
-    throw new Error("Absolute paths not supported");
-  }
-
-  if (relPath.includes("..")) {
-    throw new Error("Relative paths with .. not supported");
-  }
-
-  const scanOptions = csvOptionsFromDp(dialect);
-
-  if (isUrl(relPath)) {
-    return scanUrlCsvHelper(relPath, scanOptions);
-  }
-
-  if (isUrl(rootDir)) {
-    return scanUrlCsvHelper(path.join(rootDir, relPath), scanOptions);
-  }
-
-  return pl.scanCSV(path.join(rootDir, relPath), scanOptions);
-};
-
-const scanUrlCsvHelper = async (
-  url: string,
-  dialect: d.CsvDialect | undefined
-): Promise<pl.LazyDataFrame> => {
-  const response = await fetch(url);
-  const csv = await response.arrayBuffer();
-  if (csv === null) {
-    throw new Error("Unable to fetch CSV");
-  }
-  return pl.readCSV(Buffer.from(csv), csvOptionsFromDp(dialect)).lazy();
-};
-
-const tryScanPathCsv = async (
-  resource: d.Resource,
-  rootDir: string
-): Promise<pl.LazyDataFrame | undefined> => {
-  const paths =
-    typeof resource.path === "string" ? [resource.path] : resource.path;
-
-  // Verify format is CSV
-  if (resource.format === undefined) {
-    // If no resource format given, make sure all paths end with .csv
-    if (!paths.every((p) => p.endsWith(".csv"))) {
-      return undefined;
-    }
-  } else {
-    // If resource format given, make sure it's csv
-    if (resource.format !== "csv") {
-      return undefined;
-    }
-  }
-
-  if (
-    resource.encoding !== undefined &&
-    resource.encoding !== "utf8" &&
-    resource.encoding !== "utf-8"
-  ) {
-    throw new Error(`Encoding not supported ({resource.encoding})`);
-  }
-
-  if (paths.length === 1) {
-    return await scanPathCsvHelper(paths[0], rootDir, resource.dialect);
-  } else {
-    const scannedData = await Promise.all(
-      paths.map((p) => scanPathCsvHelper(p, rootDir, resource.dialect))
-    );
-    const collectedData = await Promise.all(
-      scannedData.map((df) => df.collect())
-    );
-    // TODO: change this when concat accepts lazyframes natively
-    return pl.concat(collectedData).lazy();
-  }
-};
-
-const scanInlineResource = async (
-  resource: d.Resource
-): Promise<pl.LazyDataFrame> => {
-  const result =
-    (await tryScanInlineRecordRows(resource)) ??
-    (await tryScanInlineArrayRows(resource)) ??
-    (await tryScanInlineCsv(resource));
-
-  if (result === undefined) {
-    throw new Error("Unable to scan inline resource");
-  }
-
-  return result;
-};
-
-const tryScanInlineRecordRows = async (
-  resource: d.Resource
-): Promise<pl.LazyDataFrame | undefined> => {
-  return undefined;
-};
-
-const tryScanInlineArrayRows = async (
-  resource: d.Resource
-): Promise<pl.LazyDataFrame | undefined> => {
-  return undefined;
-};
-
-const tryScanInlineCsv = async (
-  resource: d.Resource
-): Promise<pl.LazyDataFrame | undefined> => {
-  return undefined;
-};
-
-export const scanResourceRaw = async (
-  resource: d.Resource,
-  rootDir: string
-): Promise<pl.LazyDataFrame> => {
-  const result = await match(resource)
-    .with(P._, d.isPathResource, scanPathResource(rootDir))
-    .with(P._, d.isInlineResource, scanInlineResource)
-    .exhaustive();
-
-  // Replace null values with empty string ("")
-  return result.select(
-    result.columns.map((c) =>
-      pl.when(pl.col(c).isNull()).then(pl.lit("")).otherwise(pl.col(c)).alias(c)
-    )
-  );
-};
-
-export const readResourceRaw = async (
-  resource: d.Resource,
-  rootDir: string
-): Promise<pl.DataFrame> => {
-  const scannedResource = await scanResourceRaw(resource, rootDir);
-  return await scannedResource.collect();
-};
-
 export type ScanResourceResult = {
   values: pl.LazyDataFrame;
   missing: pl.LazyDataFrame;
@@ -339,60 +185,89 @@ export type ReadResourceResult = {
   missing: pl.DataFrame;
 };
 
-export const scanResource = async (
-  resource: d.Resource,
-  rootDir: string
-): Promise<ScanResourceResult> => {
-  if (resource.schema === undefined) {
-    throw new Error("Resource schema is undefined");
-  }
-
-  const schema = await resolveDescriptor(d.tableSchema, resource.schema);
-
-  const raw = await scanResourceRaw(resource, rootDir);
-
-  if (schema.fields.length !== raw.columns.length) {
+const convertValues = (
+  data: pl.LazyDataFrame,
+  fields: d.Field[],
+  missingValues: string[]
+) => {
+  if (fields.length !== data.columns.length) {
     throw new Error(
-      `Schema and columns length mismatch (${schema.fields.length} vs ${raw.columns.length})`
+      `Schema and columns length mismatch (${fields.length} vs ${data.columns.length})`
     );
   }
 
-  const valueExprs = schema.fields.map((field, idx) => {
-    const col = raw.columns[idx];
-    const missingValues = field.missingValues ?? schema.missingValues ?? [];
+  const valueExprs = fields.map((field, idx) => {
+    const col = data.columns[idx];
+    const mv = field.missingValues ?? missingValues ?? [];
     const type = typeFromDp(field);
     return pl
-      .when(pl.col(col).isIn(missingValues))
+      .when(pl.col(col).isIn(mv))
       .then(pl.lit(null))
       .otherwise(pl.col(col))
       .cast(type)
       .alias(field.name);
   });
 
-  const missingExprs = schema.fields.map((field, idx) => {
-    const col = raw.columns[idx];
-    const missingValues = field.missingValues ?? schema.missingValues ?? [];
+  return data.select(valueExprs);
+};
+
+const convertMissing = (
+  data: pl.LazyDataFrame,
+  fields: d.Field[],
+  missingValues: string[]
+) => {
+  if (fields.length !== data.columns.length) {
+    throw new Error(
+      `Schema and columns length mismatch (${fields.length} vs ${data.columns.length})`
+    );
+  }
+
+  const missingExprs = fields.map((field, idx) => {
+    const col = data.columns[idx];
+    const mv = field.missingValues ?? missingValues ?? [];
     return pl
-      .when(pl.col(col).isIn(missingValues))
+      .when(pl.col(col).isIn(mv))
       .then(pl.col(col))
       .otherwise(pl.lit(null))
       .alias(field.name);
   });
 
+  return data.select(missingExprs);
+};
+
+export const scanResource = async (
+  resource: m.Resource
+): Promise<ScanResourceResult> => {
+  const data = await scanResourceData(resource.data);
+  const schema = resource.schema;
+  const fields = schema.props.fields;
+  const missingValues = schema.props.missingValues ?? [];
   return {
-    values: raw.select(valueExprs),
-    missing: raw.select(missingExprs),
+    values: convertValues(data, fields, missingValues),
+    missing: convertMissing(data, fields, missingValues),
   };
 };
 
+export const scanResourceValues = async (
+  resource: m.Resource
+): Promise<pl.LazyDataFrame> => {
+  const data = await scanResourceData(resource.data);
+  const schema = resource.schema;
+  const fields = schema.props.fields;
+  const missingValues = schema.props.missingValues ?? [];
+  return convertValues(data, fields, missingValues);
+};
+
 export const readResource = async (
-  resource: d.Resource,
-  rootDir: string
+  resource: m.Resource
 ): Promise<ReadResourceResult> => {
-  const scannedResource = await scanResource(resource, rootDir);
+  const result = await scanResource(resource);
   return {
-    values: await scannedResource.values.collect(),
-    missing: await scannedResource.missing.collect(),
+    values: await result.values.collect(),
+    missing: await result.missing.collect(),
   };
 };
-*/
+
+export const readResourceValues = async (
+  resource: m.Resource
+): Promise<pl.DataFrame> => (await scanResourceValues(resource)).collect();
